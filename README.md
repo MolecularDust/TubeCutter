@@ -40,7 +40,7 @@ Binaries are excluded from Git. The installed versions/hashes are recorded in `d
 1. Choose a destination folder with the native picker.
 2. Paste a YouTube watch, youtu.be or Shorts link and Analyze.
 3. Use the full-width YouTube player. Its native controls handle playback and volume.
-4. The timeline enables automatically after analysis. Leave In/Out unchanged to download the entire video; changing either point selects a cut. Reset restores the full video. Drag In/Out, edit HH:MM:SS(.mmm), or use Set In/Set Out. I/O work outside fields; Space toggles playback. Arrow keys move a focused marker by 0.1s, Shift+Arrow by 1s.
+4. The timeline enables automatically after analysis. Leave In/Out unchanged to download the entire video; changing either point selects a cut. Reset restores the full video. Drag In/Out, edit HH:MM:SS(.mmm), or use Set In/Set Out. I/O work outside fields; Space toggles playback. Drag the red triangle above the track to scrub the playhead independently of In/Out. Arrow keys move a focused marker or playhead by 0.1s, Shift+Arrow by 1s; Home/End move the playhead to the video boundaries.
 5. Edit Length (seconds) to adjust Out; changing In or Out updates Length. Preview selection plays from In and pauses at Out; the button becomes Stop during preview. Choose Fast Cut or Precise Cut.
 6. Select a container, actual source resolution, codec, audio, subtitles and mode; add to the queue.
 7. Pause/resume or cancel active downloads. Retry failures and reveal completed files in Finder.

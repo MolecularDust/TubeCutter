@@ -13,6 +13,9 @@ import {
   updateQueue,
   clearQueueRows,
   isTrimmed,
+  timelineTime,
+  acceptPlayerTime,
+  type SeekTarget,
   type Video,
   type Settings,
   type Job,
@@ -53,6 +56,10 @@ function App() {
     [jobs, setJobs] = useState<Job[]>([]);
   const iframe = useRef<HTMLIFrameElement>(null),
     clearedJobIds = useRef(new Set<string>()),
+    scrub = useRef<{ id: number; kind: "in" | "out" | "playhead" } | null>(
+      null,
+    ),
+    seekTarget = useRef<SeekTarget | null>(null),
     previewing = useRef<false | "seeking" | "playing">(false),
     token = useRef(crypto.randomUUID()),
     timeline = useRef<HTMLDivElement>(null);
@@ -118,6 +125,16 @@ function App() {
         return;
       const { type, value } = e.data;
       if (type === "time") {
+        if (
+          !acceptPlayerTime(
+            value,
+            seekTarget.current,
+            scrub.current?.kind === "playhead",
+            performance.now(),
+          )
+        )
+          return;
+        seekTarget.current = null;
         setTime(value);
         if (
           previewing.current === "seeking" &&
@@ -194,6 +211,8 @@ function App() {
         const v = await invoke<Video>("analyze", { url: clean });
         if (!v.duration || !Number.isFinite(v.duration))
           throw Error("This video has no finite duration.");
+        scrub.current = null;
+        seekTarget.current = null;
         setVideo(v);
         setFileName(v.title);
         setFileNameEditing(false);
@@ -251,28 +270,30 @@ function App() {
         },
       });
     });
-  function drag(e: React.PointerEvent, which: "in" | "out") {
-    e.stopPropagation();
-    e.currentTarget.setPointerCapture(e.pointerId);
-    const move = (event: PointerEvent) => {
-      const r = timeline.current!.getBoundingClientRect();
-      const n = Math.max(
-        0,
-        Math.min(
-          video!.duration,
-          ((event.clientX - r.left) / r.width) * video!.duration,
-        ),
-      );
-      if (which === "in") setStart(Math.min(n, end - 0.01));
-      else setEnd(Math.max(n, start + 0.01));
-    };
-    const stop = () => {
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerup", stop);
-    };
-    window.addEventListener("pointermove", move);
-    window.addEventListener("pointerup", stop);
-  }
+  const seek = (value: number) => {
+    if (!video || !ready || busy) return;
+    const position = Math.max(0, Math.min(video.duration, value));
+    if (previewing.current) stopPreview();
+    seekTarget.current = { position, expires: performance.now() + 3000 };
+    setTime(position);
+    send("seek", position);
+  };
+  const moveTimelineControl = (
+    clientX: number,
+    kind: "in" | "out" | "playhead",
+  ) => {
+    if (!timeline.current || !video || busy) return;
+    const bounds = timeline.current.getBoundingClientRect();
+    const position = timelineTime(
+      clientX,
+      bounds.left,
+      bounds.width,
+      video.duration,
+    );
+    if (kind === "in") setStart(Math.min(position, end - 0.01));
+    else if (kind === "out") setEnd(Math.max(position, start + 0.01));
+    else seek(position);
+  };
   return (
     <div className="app">
       <header>
@@ -383,14 +404,42 @@ function App() {
               <div
                 className="timeline"
                 ref={timeline}
-                onClick={(e) => {
-                  if (e.target === e.currentTarget) {
-                    const r = e.currentTarget.getBoundingClientRect();
-                    if (!video || busy) return;
-                    if (previewing.current) stopPreview();
-                    setPreviewActive(false);
-                    send("seek", ((e.clientX - r.left) / r.width) * duration);
-                  }
+                onPointerDown={(e) => {
+                  if (!video || busy || e.button !== 0 || !e.isPrimary) return;
+                  const control = (
+                    e.target as HTMLElement
+                  ).closest<HTMLElement>("[data-timeline-control]");
+                  const kind = (control?.dataset.timelineControl ??
+                    "playhead") as "in" | "out" | "playhead";
+                  if (kind === "playhead" && !ready) return;
+                  e.preventDefault();
+                  (
+                    control ??
+                    e.currentTarget.querySelector<HTMLElement>(
+                      ".playhead-handle",
+                    )
+                  )?.focus({ preventScroll: true });
+                  e.currentTarget.setPointerCapture(e.pointerId);
+                  scrub.current = { id: e.pointerId, kind };
+                  if (!control) moveTimelineControl(e.clientX, kind);
+                }}
+                onPointerMove={(e) => {
+                  if (scrub.current?.id === e.pointerId)
+                    moveTimelineControl(e.clientX, scrub.current.kind);
+                }}
+                onPointerUp={(e) => {
+                  if (scrub.current?.id !== e.pointerId) return;
+                  const kind = scrub.current.kind;
+                  scrub.current = null;
+                  moveTimelineControl(e.clientX, kind);
+                  if (e.currentTarget.hasPointerCapture(e.pointerId))
+                    e.currentTarget.releasePointerCapture(e.pointerId);
+                }}
+                onPointerCancel={() => {
+                  scrub.current = null;
+                }}
+                onLostPointerCapture={() => {
+                  scrub.current = null;
                 }}
               >
                 <div
@@ -403,7 +452,39 @@ function App() {
                 <div
                   className="playhead"
                   style={{ left: `${(time / timelineDuration) * 100}%` }}
-                />
+                >
+                  <button
+                    className="playhead-handle"
+                    data-timeline-control="playhead"
+                    aria-label="Playhead"
+                    role="slider"
+                    aria-valuemin={0}
+                    aria-valuemax={duration}
+                    aria-valuenow={time}
+                    aria-valuetext={preciseTimestamp(time)}
+                    disabled={!ready}
+                    title="Drag to seek"
+                    onKeyDown={(e) => {
+                      if (
+                        ["ArrowLeft", "ArrowRight", "Home", "End"].includes(
+                          e.key,
+                        )
+                      ) {
+                        e.preventDefault();
+                        const delta =
+                          (e.key === "ArrowRight" ? 1 : -1) *
+                          (e.shiftKey ? 1 : 0.1);
+                        seek(
+                          e.key === "Home"
+                            ? 0
+                            : e.key === "End"
+                              ? duration
+                              : time + delta,
+                        );
+                      }
+                    }}
+                  />
+                </div>
                 {(["in", "out"] as const).map((which) => (
                   <button
                     key={which}
@@ -416,7 +497,7 @@ function App() {
                     style={{
                       left: `${((which === "in" ? start : end) / timelineDuration) * 100}%`,
                     }}
-                    onPointerDown={(e) => drag(e, which)}
+                    data-timeline-control={which}
                     onKeyDown={(e) => {
                       if (["ArrowLeft", "ArrowRight"].includes(e.key)) {
                         e.preventDefault();
@@ -482,6 +563,11 @@ function App() {
                       stopPreview();
                       return;
                     }
+                    seekTarget.current = {
+                      position: start,
+                      expires: performance.now() + 3000,
+                    };
+                    setTime(start);
                     send("seek", start);
                     previewing.current = "seeking";
                     setPreviewActive(true);

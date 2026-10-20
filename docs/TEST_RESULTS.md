@@ -131,3 +131,15 @@ Ten frontend tests and fifteen native tests pass. New regressions cover removing
 Removed the entire “Download only a section of the video / TRIM” checkbox row. Timeline, In/Out/Length, filename, and Precise Cut controls enable automatically after successful analysis. Untouched endpoints send no section to the downloader and use normal whole-video downloading. Changing In, Out, or Length sends the selected section; Reset returns to whole-video mode. Boundary comparison uses the timestamp fields' millisecond precision to avoid accidental cuts from display rounding. Selection validation remains active for both modes, and I/O shortcuts work even before the first boundary edit.
 
 Frontend production build, lint, and twelve tests pass. New tests cover unchanged/reset endpoints, timestamp rounding, either endpoint changing, and Length updating Out. Native download code is unchanged in this follow-up. No new live download was run.
+
+## Timeline seeking and red playhead handle — 21 October 2026
+
+Timeline interaction now uses pointer capture on the stable track element instead of click-target equality checks and temporary window listeners. Clicks update the playhead immediately. Dragging, releasing outside the track, pointer cancellation, and capture loss clear drag state. Brief stale player polls are ignored while a seek is pending or the playhead is being dragged, then normal player time updates resume. In/Out controls remain independent.
+
+The playhead is a red vertical line with a red triangle handle above the track, on a separate hit area from the In/Out marker bodies. It supports Arrow keys (0.1s), Shift+Arrow (1s), Home, and End when focused.
+
+Fourteen frontend tests, frontend build, and lint pass. New regressions cover repeated seek positions, clamping outside the track, and stale player updates during consecutive seeks/drags. Packaging verifies signatures, approved entitlement scope, signed sidecars, and DMG integrity.
+
+Native WKWebView verification used a separate locally signed test copy and the public Blender video, preserving the user's main app session. Repeated clicks moved the new playhead from153.800s to365.938s before initial manual playback. With Out and playhead both at378.510s, dragging the red triangle to224.513s preserved Out. Dragging Out's body afterward changed only Out to507.364s. A subsequent track click sought to100.766s and Right advanced it to100.866s. The original freeze was not consistently reproduced in the old isolated app, so the change addresses event handling, stale updates, and handle separation together rather than attributing it to one confirmed player failure.
+
+A three-second Preview selection from100.866s to103.866s displayed Stop during playback, paused at103.961s, and restored Preview selection. The temporary test instances were closed after verification.

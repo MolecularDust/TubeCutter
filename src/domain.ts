@@ -131,3 +131,32 @@ export function isTrimmed(
     Math.round(end * 1000) !== Math.round(duration * 1000)
   );
 }
+
+export type SeekTarget = { position: number; expires: number };
+export function timelineTime(
+  clientX: number,
+  left: number,
+  width: number,
+  duration: number,
+): number {
+  if (
+    ![clientX, left, width, duration].every(Number.isFinite) ||
+    width <= 0 ||
+    duration <= 0
+  )
+    return 0;
+  return Math.max(0, Math.min(duration, ((clientX - left) / width) * duration));
+}
+export function acceptPlayerTime(
+  value: number,
+  pending: SeekTarget | null,
+  dragging: boolean,
+  now: number,
+): boolean {
+  if (!Number.isFinite(value) || value < 0 || dragging) return false;
+  return (
+    !pending ||
+    Math.abs(value - pending.position) <= 1 ||
+    now >= pending.expires
+  );
+}

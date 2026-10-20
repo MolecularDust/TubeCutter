@@ -10,6 +10,8 @@ import {
   updateQueue,
   clearQueueRows,
   isTrimmed,
+  timelineTime,
+  acceptPlayerTime,
   type Job,
 } from "./domain";
 describe("YouTube URL validation", () => {
@@ -120,5 +122,31 @@ describe("automatic full-video or section download", () => {
     expect(isTrimmed(0, 634, 635)).toBe(true);
     expect(isTrimmed(0, outFromLength(0, 12, 635), 635)).toBe(true);
     expect(isTrimmed(0.001, 635, 635)).toBe(true);
+  });
+});
+
+describe("timeline scrubbing", () => {
+  it("maps repeated seeks and clamps drags outside the track", () => {
+    expect(timelineTime(25, 0, 100, 600)).toBe(150);
+    expect(timelineTime(75, 0, 100, 600)).toBe(450);
+    expect(timelineTime(-20, 0, 100, 600)).toBe(0);
+    expect(timelineTime(120, 0, 100, 600)).toBe(600);
+    expect(timelineTime(30, 0, 0, 600)).toBe(0);
+  });
+  it("does not let stale player polls pull the playhead back during repeated seeks", () => {
+    expect(
+      acceptPlayerTime(10, { position: 150, expires: 3000 }, false, 100),
+    ).toBe(false);
+    expect(
+      acceptPlayerTime(150, { position: 450, expires: 3100 }, false, 200),
+    ).toBe(false);
+    expect(
+      acceptPlayerTime(450, { position: 450, expires: 3100 }, false, 300),
+    ).toBe(true);
+    expect(acceptPlayerTime(450, null, true, 300)).toBe(false);
+    expect(acceptPlayerTime(451, null, false, 400)).toBe(true);
+    expect(
+      acceptPlayerTime(10, { position: 150, expires: 3000 }, false, 3100),
+    ).toBe(true);
   });
 });
