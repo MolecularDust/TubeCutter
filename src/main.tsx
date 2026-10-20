@@ -10,6 +10,8 @@ import {
   validSection,
   outFromLength,
   codecFamily,
+  updateQueue,
+  clearQueueRows,
   type Video,
   type Settings,
   type Job,
@@ -50,6 +52,7 @@ function App() {
     [subtitle, setSubtitle] = useState(""),
     [jobs, setJobs] = useState<Job[]>([]);
   const iframe = useRef<HTMLIFrameElement>(null),
+    clearedJobIds = useRef(new Set<string>()),
     previewing = useRef<false | "seeking" | "playing">(false),
     token = useRef(crypto.randomUUID()),
     timeline = useRef<HTMLDivElement>(null);
@@ -87,14 +90,10 @@ function App() {
       .then(setOrigin)
       .catch((e) => setError(String(e)));
     invoke<Job[]>("jobs")
-      .then(setJobs)
+      .then((loaded) => setJobs(clearQueueRows(loaded, clearedJobIds.current)))
       .catch((e) => setError(String(e)));
     listen<Job>("job", (e) =>
-      setJobs((old) =>
-        old.some((j) => j.id === e.payload.id)
-          ? old.map((j) => (j.id === e.payload.id ? e.payload : j))
-          : [e.payload, ...old],
-      ),
+      setJobs((old) => updateQueue(old, e.payload, clearedJobIds.current)),
     )
       .then((fn) => {
         if (disposed) fn();
@@ -714,8 +713,11 @@ function App() {
               }
               onClick={() =>
                 act(async () => {
-                  await invoke("clear_completed");
-                  setJobs(await invoke("jobs"));
+                  const cleared = await invoke<string[]>("clear_completed");
+                  for (const id of cleared) clearedJobIds.current.add(id);
+                  setJobs((current) =>
+                    clearQueueRows(current, clearedJobIds.current),
+                  );
                 })
               }
             >

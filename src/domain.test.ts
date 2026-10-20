@@ -7,6 +7,9 @@ import {
   validSection,
   outFromLength,
   codecFamily,
+  updateQueue,
+  clearQueueRows,
+  type Job,
 } from "./domain";
 describe("YouTube URL validation", () => {
   it("normalizes supported links and strips tracking", () => {
@@ -71,4 +74,37 @@ it("links fractional Length to Out and rejects cuts outside the video", () => {
   expect(outFromLength(10.125, 12.375 - 10.125, 20)).toBe(12.375);
   for (const length of [0, -1, NaN, Infinity, 11])
     expect(() => outFromLength(10, length, 20)).toThrow();
+});
+
+describe("clearing completed queue rows", () => {
+  const job = (id: string, state: string): Job => ({
+    id,
+    state,
+    title: id,
+    progress: 100,
+    speed: "",
+    bytes: "",
+    eta: "",
+    message: "",
+    path: "",
+  });
+  it("removes successful and canceled jobs while preserving new active jobs", () => {
+    const cleared = new Set(["done", "canceled"]);
+    const rows = [
+      job("done", "completed"),
+      job("canceled", "canceled"),
+      job("new", "downloading"),
+    ];
+    expect(clearQueueRows(rows, cleared).map((j) => j.id)).toEqual(["new"]);
+  });
+  it("ignores delayed completion and cleanup events after clearing", () => {
+    const cleared = new Set(["done", "canceled"]);
+    let rows = [job("active", "downloading")];
+    rows = updateQueue(rows, job("done", "completed"), cleared);
+    rows = updateQueue(rows, job("canceled", "canceled"), cleared);
+    expect(rows.map((j) => j.id)).toEqual(["active"]);
+    expect(
+      updateQueue(rows, job("next", "completed"), cleared).map((j) => j.id),
+    ).toEqual(["next", "active"]);
+  });
 });

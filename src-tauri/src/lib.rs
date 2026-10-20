@@ -669,8 +669,8 @@ fn control(
     Ok(())
 }
 #[tauri::command]
-fn clear_completed(s: State<Backend>) {
-    clear_finished(&mut s.jobs.lock().unwrap());
+fn clear_completed(s: State<Backend>) -> Vec<String> {
+    clear_finished(&mut s.jobs.lock().unwrap())
 }
 #[tauri::command]
 fn retry(app: tauri::AppHandle, s: State<Backend>, id: String) -> Result<String, String> {

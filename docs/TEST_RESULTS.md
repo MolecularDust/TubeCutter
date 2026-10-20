@@ -119,3 +119,9 @@ Eight frontend tests and fifteen native tests pass, with production build, lint,
 ## Edited filename in queue
 
 Queue titles now use the edited output filename, including the selected container extension, from the moment a job is enqueued. Unedited downloads keep the original video title. The queue uses the same filename normalization as final output, including retries. Native compilation passes; this display fix reuses the existing filename validation and normalization coverage.
+
+## Clear Completed acknowledgment and late-event regression
+
+Clearing now returns the exact cleared job IDs from the native command. The frontend removes those IDs from its current queue and remembers them for the session, ignoring any delayed completion or cancellation-cleanup event for those jobs. It no longer replaces the queue with a separate asynchronous snapshot after clearing, so newly arriving active jobs are preserved.
+
+Ten frontend tests and fifteen native tests pass. New regressions cover removing successful and canceled jobs, preserving a concurrently added active job, and ignoring delayed completion/cleanup events. The native clearing test now checks the acknowledged IDs as well as hidden worker records. Production build, frontend lint, Rust formatting, and strict Clippy pass. The inspected native session had an empty queue; this follow-up was verified with deterministic state-transition tests rather than a live completed download.

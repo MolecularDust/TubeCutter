@@ -202,7 +202,9 @@ mod selection_tests {
                 },
             );
         }
-        clear_finished(&mut jobs);
+        let mut cleared = clear_finished(&mut jobs);
+        cleared.sort();
+        assert_eq!(cleared, vec!["canceled", "completed"]);
         assert!(jobs["completed"].hidden);
         assert!(jobs["canceled"].hidden);
         for state in ["downloading", "queued", "paused", "failed"] {
@@ -302,13 +304,16 @@ pub fn format_size(bytes: u64) -> String {
         format!("{bytes} B")
     }
 }
-pub fn clear_finished(jobs: &mut std::collections::HashMap<String, Job>) {
+pub fn clear_finished(jobs: &mut std::collections::HashMap<String, Job>) -> Vec<String> {
+    let mut cleared = Vec::new();
     // Retain internal records while canceled workers finish cleanup; hide all later events.
     for job in jobs.values_mut() {
         if ["completed", "canceled"].contains(&job.state.as_str()) {
             job.hidden = true;
+            cleared.push(job.id.clone());
         }
     }
+    cleared
 }
 
 #[cfg(test)]

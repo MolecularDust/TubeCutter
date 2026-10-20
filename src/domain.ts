@@ -102,3 +102,20 @@ export function outFromLength(
     throw Error("Length must be positive and fit within the video.");
   return out;
 }
+
+export function updateQueue(
+  jobs: Job[],
+  incoming: Job,
+  clearedIds: ReadonlySet<string>,
+): Job[] {
+  if (clearedIds.has(incoming.id)) return jobs;
+  return jobs.some((j) => j.id === incoming.id)
+    ? jobs.map((j) => (j.id === incoming.id ? incoming : j))
+    : [incoming, ...jobs];
+}
+export function clearQueueRows(
+  jobs: Job[],
+  clearedIds: ReadonlySet<string>,
+): Job[] {
+  return jobs.filter((j) => !clearedIds.has(j.id));
+}
