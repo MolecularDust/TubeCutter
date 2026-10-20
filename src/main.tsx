@@ -12,6 +12,7 @@ import {
   codecFamily,
   updateQueue,
   clearQueueRows,
+  isTrimmed,
   type Video,
   type Settings,
   type Job,
@@ -39,7 +40,6 @@ function App() {
     [ready, setReady] = useState(false),
     [previewActive, setPreviewActive] = useState(false),
     [lengthValid, setLengthValid] = useState(true),
-    [section, setSection] = useState(true),
     [start, setStart] = useState(0),
     [end, setEnd] = useState(0),
     [time, setTime] = useState(0),
@@ -172,8 +172,8 @@ function App() {
         e.preventDefault();
         send("toggle");
       }
-      if (section && e.key.toLowerCase() === "i") setIn();
-      if (section && e.key.toLowerCase() === "o") setOut();
+      if (e.key.toLowerCase() === "i") setIn();
+      if (e.key.toLowerCase() === "o") setOut();
     };
     window.addEventListener("keydown", h);
     return () => window.removeEventListener("keydown", h);
@@ -226,9 +226,9 @@ function App() {
     codec === "auto";
   const duration = video?.duration ?? 0;
   const timelineDuration = duration || 1;
+  const section = !!video && isTrimmed(start, end, video.duration);
   const selectionValid =
-    !section ||
-    (!!video && lengthValid && validSection(start, end, video.duration));
+    !!video && lengthValid && validSection(start, end, video.duration);
   const enqueue = () =>
     act(async () => {
       if (!video || !selectionValid)
@@ -372,23 +372,7 @@ function App() {
           </div>
           {playerError && <div className="notice error">{playerError}</div>}
           <div className="trim">
-            <label className="check">
-              <input
-                type="checkbox"
-                checked={section}
-                disabled={!video || busy}
-                onChange={(e) => {
-                  setSection(e.target.checked);
-                  stopPreview();
-                }}
-              />
-              <span>Download only a section of the video</span>
-              <span className="key-hint">TRIM</span>
-            </label>
-            <fieldset
-              className="trim-details"
-              disabled={!video || busy || !section}
-            >
+            <fieldset className="trim-details" disabled={!video || busy}>
               <div className="timeline-labels">
                 <span>{timestamp(0)}</span>
                 <span>
@@ -402,7 +386,7 @@ function App() {
                 onClick={(e) => {
                   if (e.target === e.currentTarget) {
                     const r = e.currentTarget.getBoundingClientRect();
-                    if (!video || busy || !section) return;
+                    if (!video || busy) return;
                     if (previewing.current) stopPreview();
                     setPreviewActive(false);
                     send("seek", ((e.clientX - r.left) / r.width) * duration);
@@ -510,7 +494,7 @@ function App() {
                   onClick={() => {
                     setStart(0);
                     setEnd(duration);
-                    if (!video || busy || !section) return;
+                    if (!video || busy) return;
                     if (previewing.current) stopPreview();
                     setPreviewActive(false);
                   }}

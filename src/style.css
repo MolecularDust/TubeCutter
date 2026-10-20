@@ -279,7 +279,7 @@ input::placeholder {
   border-radius: 4px;
 }
 .trim-details {
-  margin-top: 25px;
+  margin-top: 0;
 }
 .timeline-labels {
   display: flex;

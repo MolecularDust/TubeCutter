@@ -9,6 +9,7 @@ import {
   codecFamily,
   updateQueue,
   clearQueueRows,
+  isTrimmed,
   type Job,
 } from "./domain";
 describe("YouTube URL validation", () => {
@@ -106,5 +107,18 @@ describe("clearing completed queue rows", () => {
     expect(
       updateQueue(rows, job("next", "completed"), cleared).map((j) => j.id),
     ).toEqual(["next", "active"]);
+  });
+});
+
+describe("automatic full-video or section download", () => {
+  it("downloads the full video for unchanged or reset boundaries", () => {
+    expect(isTrimmed(0, 635, 635)).toBe(false);
+    expect(isTrimmed(0, 12.345, 12.3454)).toBe(false);
+  });
+  it("cuts when either boundary or length changes", () => {
+    expect(isTrimmed(1, 635, 635)).toBe(true);
+    expect(isTrimmed(0, 634, 635)).toBe(true);
+    expect(isTrimmed(0, outFromLength(0, 12, 635), 635)).toBe(true);
+    expect(isTrimmed(0.001, 635, 635)).toBe(true);
   });
 });

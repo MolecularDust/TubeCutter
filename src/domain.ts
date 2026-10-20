@@ -119,3 +119,15 @@ export function clearQueueRows(
 ): Job[] {
   return jobs.filter((j) => !clearedIds.has(j.id));
 }
+
+/** Match the millisecond precision shown by the In/Out fields. */
+export function isTrimmed(
+  start: number,
+  end: number,
+  duration: number,
+): boolean {
+  return (
+    Math.round(start * 1000) !== 0 ||
+    Math.round(end * 1000) !== Math.round(duration * 1000)
+  );
+}

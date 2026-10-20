@@ -125,3 +125,9 @@ Queue titles now use the edited output filename, including the selected containe
 Clearing now returns the exact cleared job IDs from the native command. The frontend removes those IDs from its current queue and remembers them for the session, ignoring any delayed completion or cancellation-cleanup event for those jobs. It no longer replaces the queue with a separate asynchronous snapshot after clearing, so newly arriving active jobs are preserved.
 
 Ten frontend tests and fifteen native tests pass. New regressions cover removing successful and canceled jobs, preserving a concurrently added active job, and ignoring delayed completion/cleanup events. The native clearing test now checks the acknowledged IDs as well as hidden worker records. Production build, frontend lint, Rust formatting, and strict Clippy pass. The inspected native session had an empty queue; this follow-up was verified with deterministic state-transition tests rather than a live completed download.
+
+## Automatic trimming without a mode checkbox
+
+Removed the entire “Download only a section of the video / TRIM” checkbox row. Timeline, In/Out/Length, filename, and Precise Cut controls enable automatically after successful analysis. Untouched endpoints send no section to the downloader and use normal whole-video downloading. Changing In, Out, or Length sends the selected section; Reset returns to whole-video mode. Boundary comparison uses the timestamp fields' millisecond precision to avoid accidental cuts from display rounding. Selection validation remains active for both modes, and I/O shortcuts work even before the first boundary edit.
+
+Frontend production build, lint, and twelve tests pass. New tests cover unchanged/reset endpoints, timestamp rounding, either endpoint changing, and Length updating Out. Native download code is unchanged in this follow-up. No new live download was run.
