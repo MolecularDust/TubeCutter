@@ -856,3 +856,10 @@ fieldset.trim-details:disabled {
   color: var(--muted);
   font-size: 10px;
 }
+
+div.check {
+  cursor: default;
+}
+div.check input {
+  cursor: pointer;
+}

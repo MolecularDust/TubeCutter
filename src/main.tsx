@@ -545,19 +545,21 @@ function App() {
                   extension.
                 </small>
               </label>
-              <label className="check">
+              <div className="check">
                 <input
                   type="checkbox"
+                  aria-label="Precise Cut"
+                  aria-describedby="precise-cut-description"
                   checked={precise}
                   onChange={(e) => setPrecise(e.target.checked)}
                 />
-                Precise Cut{" "}
-                <small>
+                <span>Precise Cut</span>
+                <small id="precise-cut-description">
                   {precise
                     ? "Re-encodes for accurate boundaries. Automatic uses H.264 / AAC."
                     : "Fast Cut preserves streams; boundaries may align to keyframes."}
                 </small>
-              </label>
+              </div>
             </fieldset>
             {!video && (
               <small className="trim-hint">
