@@ -1,0 +1,35 @@
+# Architecture and dependencies
+
+React 19 and TypeScript render the interface. Tauri 2 owns the WKWebView, Rust command bridge, application lifecycle and bundle. Vite builds static frontend assets. No Electron, remote app UI, shell plugin, or general-purpose command-execution API is exposed.
+
+`src/domain.ts` contains URL and timestamp rules. `src/main.tsx` coordinates the real player, editor and queue. `src-tauri/src/model.rs` validates native requests independently. `platform.rs` resolves executable paths and handles process groups. `player.rs` serves the static IFrame API host on an ephemeral IPv4 loopback port. `lib.rs` implements metadata, settings, native dialogs and background download workers.
+
+## Tools and licensing
+
+- React / React DOM: MIT, https://github.com/facebook/react
+- Tauri: MIT OR Apache-2.0, https://github.com/tauri-apps/tauri
+- rfd native dialogs: MIT, https://github.com/PolyMeilex/rfd
+- yt-dlp standalone macOS executable: upstream release, includes Python; executable distribution contains additional dependencies and follows upstream bundled licensing (GPLv3+). https://github.com/yt-dlp/yt-dlp/blob/master/THIRD_PARTY_LICENSES.txt
+- FFmpeg / FFprobe: static ARM64 release from https://ffmpeg.martin-riedl.de/ ; build enables GPL and version3, including x264/x265 and other libraries. Treat these builds as GPLv3+. Corresponding sources/build recipe must accompany public redistribution under applicable licenses. https://github.com/FFmpeg/FFmpeg and https://github.com/markus-perl/ffmpeg-build-script
+- Deno: MIT with third-party notices, https://github.com/denoland/deno
+- YouTube IFrame API is loaded from YouTube, subject to Google's API terms and required player behavior. Player controls remain unobstructed.
+
+`tool-manifest.json` records the versions and SHA256 hashes of the sidecars in this local build. `LICENSES` contains notices fetched from upstream. This local ad-hoc signed build is for development evaluation; public release still requires assembling complete corresponding source and third-party notices for the exact media binary builds, plus Developer ID signing and notarization. No claim of release licensing clearance is made.
+
+## Player identity
+
+The player uses the official IFrame API inside an HTTP page at `http://127.0.0.1:<random>/player`. That page sets `strict-origin-when-cross-origin` and supplies its real origin to YouTube. This avoids relying on the custom Tauri URL as a Referer. Parent/child messages require the expected iframe window, exact local origin and per-video random token. Native IPC is available only to the main application window, not the local player page.
+
+References: https://developers.google.com/youtube/iframe_api_reference and https://developers.google.com/youtube/terms/required-minimum-functionality#embedded-player-api-client-identity . Error 153 is shown explicitly; this approach must be tested in the packaged WKWebView, not inferred from browser success.
+
+## Download behavior
+
+yt-dlp receives structured arguments with `--ignore-config` and `--` before the normalized URL. Resolution filters use equality and explicit codec filters have no quality-degrading fallback. MKV preserves a wider range of streams; remux failures are reported. MP4 Original Compatible Audio selects original AAC. Best Audio retains yt-dlp's best source audio and can fail if the muxer cannot accept it. Audio-only places the original audio stream into the selected MP4/MKV container. No Audio requires a video-only source.
+
+Sections use `--download-sections`. Fast Cut stream-copies and can land on keyframes. Precise Cut uses `--force-keyframes-at-cuts` with explicit FFmpeg output encoder settings: H.264/libx264, HEVC/libx265, AV1/libaom-av1 or VP9/libvpx-vp9, CRF 18 and AAC audio. Automatic Precise Cut uses H.264/AAC. There is no dimension scaling. FFprobe verifies duration, requested height, codec, and expected audio presence. A duration deviation is displayed, including a warning beyond 250 ms. This is a structural media check, not a perceptual lip-sync guarantee.
+
+A failed section is never automatically retried as a whole-video download. Some delivery formats still transfer more data than the requested interval; byte-range savings cannot be guaranteed by yt-dlp. No hidden transcoding is performed for ordinary downloads.
+
+Unique output names and `--no-overwrites` protect existing files. Failed/canceled partial files remain for inspection. Pause/resume uses Unix process-group STOP/CONT, preserving the running process, not resumability across app restarts; server connections can expire during a long pause. Cancellation kills the entire process group and the parent is reaped. App exit cancels active downloads. Windows process-tree control and platform packaging remain future work.
+
+Browser cookie access occurs only after the user explicitly chooses a session in Account & Settings. No custom Google login exists. Raw subprocess diagnostics are classified into safe errors and never sent to the UI or logged. Settings store paths and browser choice, not cookie content. Browser authentication is not exercised during anonymous integration tests.

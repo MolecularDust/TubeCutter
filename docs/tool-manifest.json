@@ -1,0 +1,26 @@
+[
+  {
+    "name": "yt-dlp",
+    "target": "aarch64-apple-darwin",
+    "sha256": "7f785fa6d6c5bc0aed066cdb880a7ec3b453ec88482c3981559fc9ce70488195",
+    "version": "2026.08.19"
+  },
+  {
+    "name": "ffmpeg",
+    "target": "aarch64-apple-darwin",
+    "sha256": "c51688eaaf4093f3b88a2aeee43fddca73ea3b155afba29dfafd2342b44fd2bf",
+    "version": "ffmpeg version 9.0.2-https://www.martin-riedl.de Copyright (c) 2000-2026 the FFmpeg developers"
+  },
+  {
+    "name": "ffprobe",
+    "target": "aarch64-apple-darwin",
+    "sha256": "96f035db680234a6746954c2d189cba899c627e24dac2e8f3bb1b72714b942ce",
+    "version": "ffprobe version 9.0.2-https://www.martin-riedl.de Copyright (c) 2007-2026 the FFmpeg developers"
+  },
+  {
+    "name": "deno",
+    "target": "aarch64-apple-darwin",
+    "sha256": "ab261832e8319004b6687c0508633cc3efa81e429b2101527838cb1e327daa53",
+    "version": "deno 2.9.7 (stable, release, aarch64-apple-darwin)"
+  }
+]

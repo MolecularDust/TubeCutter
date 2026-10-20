@@ -1,0 +1,38 @@
+[
+  {
+    "name": "whole",
+    "status": "PASS",
+    "duration": 634.594,
+    "expected": 635,
+    "deviation": -0.40599999999994907,
+    "audioVideoStartSkew": 0,
+    "height": 144,
+    "videoCodec": "h264",
+    "audioCodec": "opus",
+    "fullDecode": "PASS"
+  },
+  {
+    "name": "fast",
+    "status": "PASS",
+    "duration": 15.012,
+    "expected": 5,
+    "deviation": 10.012,
+    "audioVideoStartSkew": 0,
+    "height": 144,
+    "videoCodec": "h264",
+    "audioCodec": "opus",
+    "fullDecode": "PASS"
+  },
+  {
+    "name": "precise",
+    "status": "PASS",
+    "duration": 5,
+    "expected": 5,
+    "deviation": 0,
+    "audioVideoStartSkew": 0,
+    "height": 144,
+    "videoCodec": "h264",
+    "audioCodec": "aac",
+    "fullDecode": "PASS"
+  }
+]

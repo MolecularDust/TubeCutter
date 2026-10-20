@@ -1,0 +1,7 @@
+<!doctype html><html><head><meta name="referrer" content="strict-origin-when-cross-origin"><style>html,body,#player{margin:0;width:100%;height:100%;background:#101116;overflow:hidden}</style></head><body><div id="player"></div><script>
+const q=new URLSearchParams(location.search),token=q.get('token');let player;
+function send(type,value){parent.postMessage({token,type,value},'*')}
+function onYouTubeIframeAPIReady(){player=new YT.Player('player',{videoId:q.get('id'),width:'100%',height:'100%',playerVars:{origin:location.origin,playsinline:1,controls:1},events:{onReady:()=>send('ready',true),onError:e=>send('error',e.data),onStateChange:e=>send('state',e.data)}})}
+addEventListener('message',e=>{if(e.source!==parent||e.data?.token!==token||!player)return;const{action,value}=e.data;if(action==='seek')player.seekTo(value,true);if(action==='play')player.playVideo();if(action==='pause')player.pauseVideo();if(action==='toggle')player.getPlayerState()===1?player.pauseVideo():player.playVideo()});
+setInterval(()=>{if(player?.getCurrentTime)send('time',player.getCurrentTime())},100);
+</script><script src="https://www.youtube.com/iframe_api"></script></body></html>
