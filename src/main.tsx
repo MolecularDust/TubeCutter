@@ -37,7 +37,7 @@ function App() {
     [ready, setReady] = useState(false),
     [previewActive, setPreviewActive] = useState(false),
     [lengthValid, setLengthValid] = useState(true),
-    [section, setSection] = useState(false),
+    [section, setSection] = useState(true),
     [start, setStart] = useState(0),
     [end, setEnd] = useState(0),
     [time, setTime] = useState(0),
@@ -749,7 +749,6 @@ function App() {
                     <span>
                       {[
                         `${j.progress.toFixed(1)}%`,
-                        j.bytes,
                         j.speed,
                         j.eta ? `${j.eta} remaining` : "",
                       ]

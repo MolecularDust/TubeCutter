@@ -273,6 +273,8 @@ fn download(
             }
             tail
         });
+        let mut rate_sample = std::time::Instant::now();
+        let mut rate_bytes = 0_u64;
         for line in BufReader::new(child.stdout.take().unwrap())
             .lines()
             .map_while(Result::ok)
@@ -287,7 +289,15 @@ fn download(
                     });
                 }
             } else if let Some(bytes) = line.strip_prefix("total_size=") {
-                update(&app, &jobs, &id, |j| j.bytes = format!("{bytes} B"));
+                if let Ok(bytes) = bytes.parse::<u64>() {
+                    let elapsed = rate_sample.elapsed().as_secs_f64();
+                    if elapsed >= 0.5 {
+                        let speed = format_speed(bytes.saturating_sub(rate_bytes) as f64 / elapsed);
+                        update(&app, &jobs, &id, |j| j.speed = speed);
+                        rate_sample = std::time::Instant::now();
+                        rate_bytes = bytes;
+                    }
+                }
             } else if let Some(rest) = line.strip_prefix("PROGRESS|") {
                 let p: Vec<_> = rest.split('|').collect();
                 if p.len() == 4 {

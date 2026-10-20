@@ -101,3 +101,9 @@ Native validation rejects empty names, path separators, colons, control characte
 ## Precise Cut click target
 
 The Precise Cut row is now a plain container rather than a wrapping label. Only the checkbox toggles the setting; clicking its text, description, or trailing blank space does not. The checkbox retains its accessible name, description, and keyboard behavior. Only the checkbox shows a pointer cursor. Frontend build and lint pass; this semantic HTML change was inspected in source without restarting the user's active session.
+
+## Default section mode and queue transfer rate
+
+Section download mode is checked by default; its controls still wait for a processed video link. The queue no longer displays accumulated bytes. Normal yt-dlp downloads show the downloader's reported speed. FFmpeg section downloads sample output-byte changes over elapsed wall time and show effective output throughput in B/s, KiB/s, or MiB/s, rather than FFmpeg's media-playback speed multiplier. Completed jobs clear the speed as before.
+
+Frontend build/lint, eight frontend tests, fourteen native tests, formatting, and strict Clippy pass. The new native test covers rate units and invalid values. No live transfer was run for this follow-up.

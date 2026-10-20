@@ -235,3 +235,30 @@ mod filename_tests {
         assert!(output_file_name(&"a".repeat(181), "mp4").is_err());
     }
 }
+
+/// Effective output transfer rate for FFmpeg section downloads.
+pub fn format_speed(bytes_per_second: f64) -> String {
+    if !bytes_per_second.is_finite() || bytes_per_second < 0. {
+        return String::new();
+    }
+    let (value, unit) = if bytes_per_second >= 1_048_576. {
+        (bytes_per_second / 1_048_576., "MiB/s")
+    } else if bytes_per_second >= 1024. {
+        (bytes_per_second / 1024., "KiB/s")
+    } else {
+        (bytes_per_second, "B/s")
+    };
+    format!("{value:.1} {unit}")
+}
+#[cfg(test)]
+mod speed_tests {
+    use super::*;
+    #[test]
+    fn formats_transfer_speed_in_units_per_second() {
+        assert_eq!(format_speed(512.), "512.0 B/s");
+        assert_eq!(format_speed(2048.), "2.0 KiB/s");
+        assert_eq!(format_speed(2.5 * 1_048_576.), "2.5 MiB/s");
+        assert_eq!(format_speed(f64::NAN), "");
+        assert_eq!(format_speed(-1.), "");
+    }
+}
