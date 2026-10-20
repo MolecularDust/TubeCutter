@@ -17,16 +17,25 @@ impl DownloadFiles {
             destination,
         })
     }
-    pub fn publish(&self, path: &Path) -> Result<PathBuf, String> {
+    pub fn publish(&self, path: &Path, name: Option<&str>) -> Result<PathBuf, String> {
         let path = path
             .canonicalize()
             .map_err(|_| "Verified output is unavailable")?;
         if path.parent() != Some(self.directory.as_path()) {
             return Err("Output is outside this download's staging folder".into());
         }
-        let destination = self
-            .destination
-            .join(path.file_name().ok_or("Output has no filename")?);
+        let filename = match name {
+            Some(name) => {
+                if Path::new(name).file_name() != Some(std::ffi::OsStr::new(name))
+                    || name.contains(['/', '\\'])
+                {
+                    return Err("Invalid output filename".into());
+                }
+                std::ffi::OsStr::new(name)
+            }
+            None => path.file_name().ok_or("Output has no filename")?,
+        };
+        let destination = self.destination.join(filename);
         // Staging is on the same volume. A hard link publishes atomically without overwriting.
         std::fs::hard_link(path, &destination).map_err(|_| {
             "Cannot save output; check for an existing filename or destination permissions"
@@ -96,9 +105,13 @@ mod tests {
         let files = DownloadFiles::new(&dest).unwrap();
         let source = files.directory.join("video.mp4");
         std::fs::write(&source, b"complete").unwrap();
-        let final_path = files.publish(&source).unwrap();
-        assert!(files.publish(&source).is_err());
-        assert!(files.publish(&dest.join("video.mp4")).is_err());
+        let final_path = files.publish(&source, Some("Custom clip.mp4")).unwrap();
+        assert_eq!(final_path.file_name().unwrap(), "Custom clip.mp4");
+        assert!(!dest.join("video.mp4").exists());
+        let default_path = files.publish(&source, None).unwrap();
+        assert_eq!(default_path.file_name().unwrap(), "video.mp4");
+        assert!(files.publish(&source, Some("Custom clip.mp4")).is_err());
+        assert!(files.publish(&dest.join("Custom clip.mp4"), None).is_err());
         files.cleanup().unwrap();
         assert_eq!(std::fs::read(final_path).unwrap(), b"complete");
         std::fs::remove_dir_all(dest).unwrap();

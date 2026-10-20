@@ -26,6 +26,9 @@ function App() {
   const [settings, setSettings] = useState<Settings>(defaults),
     [showSettings, setShowSettings] = useState(false),
     [url, setUrl] = useState(""),
+    [fileName, setFileName] = useState(""),
+    [fileNameEditing, setFileNameEditing] = useState(false),
+    [fileNameEdited, setFileNameEdited] = useState(false),
     [video, setVideo] = useState<Video | null>(null),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
@@ -193,6 +196,9 @@ function App() {
         if (!v.duration || !Number.isFinite(v.duration))
           throw Error("This video has no finite duration.");
         setVideo(v);
+        setFileName(v.title);
+        setFileNameEditing(false);
+        setFileNameEdited(false);
         setStart(0);
         setEnd(v.duration);
         setTime(0);
@@ -232,6 +238,7 @@ function App() {
         request: {
           url: video.url,
           title: video.title,
+          fileName: fileNameEdited ? fileName.trim() : null,
           destination: settings.destination,
           container,
           resolution: resolution ? Number(resolution) : null,
@@ -512,6 +519,32 @@ function App() {
                   Reset
                 </button>
               </div>
+              <label
+                className={`download-filename${fileNameEditing || fileNameEdited ? " is-editing" : ""}`}
+              >
+                <span>File name</span>
+                <div>
+                  <input
+                    aria-label="File name"
+                    value={fileName}
+                    readOnly={!fileNameEditing}
+                    onFocus={() => setFileNameEditing(true)}
+                    onChange={(e) => {
+                      setFileName(e.target.value);
+                      setFileNameEdited(true);
+                    }}
+                    onBlur={() => {
+                      if (!fileNameEdited) setFileNameEditing(false);
+                    }}
+                    placeholder="Process a video link to see its file name"
+                  />
+                  <span>.{container}</span>
+                </div>
+                <small>
+                  Click to rename. The selected container supplies the file
+                  extension.
+                </small>
+              </label>
               <label className="check">
                 <input
                   type="checkbox"

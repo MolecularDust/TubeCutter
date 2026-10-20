@@ -410,7 +410,12 @@ fn download(
         if j.state == "canceled" {
             return Ok(());
         }
-        let final_path = staging.publish(std::path::Path::new(&path))?;
+        let custom_name = r
+            .file_name
+            .as_deref()
+            .map(|name| output_file_name(name, &r.container))
+            .transpose()?;
+        let final_path = staging.publish(std::path::Path::new(&path), custom_name.as_deref())?;
         j.path = final_path.to_string_lossy().into_owned();
         j.state = "completed".into();
         j.progress = 100.;

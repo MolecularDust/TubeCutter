@@ -12,6 +12,8 @@ pub struct Settings {
 pub struct Request {
     pub url: String,
     pub title: String,
+    #[serde(default)]
+    pub file_name: Option<String>,
     pub destination: String,
     pub container: String,
     pub resolution: Option<u32>,
@@ -78,6 +80,9 @@ pub fn normalize(input: &str) -> Result<String, String> {
 }
 pub fn validate(r: &Request) -> Result<(), String> {
     normalize(&r.url)?;
+    if let Some(name) = &r.file_name {
+        output_file_name(name, &r.container)?;
+    }
     if !["mp4", "mkv"].contains(&r.container.as_str())
         || !["auto", "h264", "hevc", "av1", "vp9"].contains(&r.codec.as_str())
         || !["best", "original", "none"].contains(&r.audio.as_str())
@@ -135,6 +140,7 @@ mod selection_tests {
         Request {
             url: "https://youtu.be/aqz-KE-bpKQ".into(),
             title: "Test".into(),
+            file_name: None,
             destination: "/tmp".into(),
             container: "mp4".into(),
             resolution: Some(1080),
@@ -170,5 +176,62 @@ mod selection_tests {
         let mut r = request();
         r.duration = f64::INFINITY;
         assert!(validate(&r).is_err());
+    }
+}
+
+pub fn output_file_name(input: &str, container: &str) -> Result<String, String> {
+    if input.chars().any(char::is_control) {
+        return Err("File names cannot contain control characters.".into());
+    }
+    let input = input.trim();
+    let lower = input.to_ascii_lowercase();
+    let stem = if lower.ends_with(".mp4") || lower.ends_with(".mkv") {
+        &input[..input.len() - 4]
+    } else {
+        input
+    };
+    if stem.trim().is_empty()
+        || [".", ".."].contains(&stem)
+        || stem.len() > 180
+        || stem
+            .chars()
+            .any(|c| c.is_control() || matches!(c, '/' | '\\' | ':'))
+    {
+        return Err(
+            "Enter a file name of up to 180 bytes without slashes, colons, or control characters."
+                .into(),
+        );
+    }
+    Ok(format!("{stem}.{container}"))
+}
+#[cfg(test)]
+mod filename_tests {
+    use super::*;
+    #[test]
+    fn preserves_custom_names_and_uses_selected_extension() {
+        assert_eq!(output_file_name(" My clip ", "mp4").unwrap(), "My clip.mp4");
+        assert_eq!(output_file_name("Clip.MP4", "mkv").unwrap(), "Clip.mkv");
+        assert_eq!(
+            output_file_name("100% café", "mp4").unwrap(),
+            "100% café.mp4"
+        );
+    }
+    #[test]
+    fn rejects_empty_names_and_path_traversal() {
+        for name in [
+            "",
+            " ",
+            ".",
+            "..",
+            "../clip",
+            "/tmp/clip",
+            "folder\\clip",
+            "a:b",
+            "a\n",
+            ".mp4",
+        ] {
+            assert!(output_file_name(name, "mp4").is_err(), "{name:?}");
+        }
+        assert!(output_file_name(&"a".repeat(181), "mp4").is_err());
     }
 }
