@@ -11,6 +11,9 @@
       "../docs/tool-manifest.json",
       "../LICENSES/",
       "resources/cacert.pem"
-    ]
+    ],
+    "macOS": {
+      "signingIdentity": "-"
+    }
   }
 }

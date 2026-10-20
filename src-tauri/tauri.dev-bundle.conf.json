@@ -1,0 +1,19 @@
+{
+  "bundle": {
+    "externalBin": [
+      "binaries/yt-dlp",
+      "binaries/ffmpeg",
+      "binaries/ffprobe",
+      "binaries/deno"
+    ],
+    "resources": [
+      "../docs/DEPENDENCIES.md",
+      "../docs/tool-manifest.json",
+      "../LICENSES/",
+      "resources/cacert.pem"
+    ],
+    "macOS": {
+      "signingIdentity": null
+    }
+  }
+}

@@ -28,6 +28,8 @@ pub fn binary(name: &str) -> Result<PathBuf, String> {
 }
 pub fn command(name: &str) -> Result<Command, String> {
     let mut c = Command::new(binary(name)?);
+    // Interpreter mode works under hardened signing without JIT entitlements.
+    c.env("DENO_V8_FLAGS", "--jitless");
     let exe = std::env::current_exe().map_err(|_| "Cannot locate application")?;
     let bundled_ca = exe
         .parent()

@@ -12,7 +12,8 @@
     "desktop": "node scripts/desktop.mjs dev",
     "package": "npm run prepare:sidecars && node scripts/desktop.mjs build --config src-tauri/tauri.bundle.conf.json",
     "prepare:sidecars": "node scripts/prepare-sidecars.mjs",
-    "format": "prettier --write src scripts docs README.md"
+    "format": "prettier --write src scripts docs README.md",
+    "package:dev": "npm run prepare:sidecars && node scripts/desktop.mjs build --debug --bundles app --config src-tauri/tauri.dev-bundle.conf.json"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.8",

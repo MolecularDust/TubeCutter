@@ -1,12 +1,64 @@
 import { spawnSync } from "node:child_process";
-import { writeFileSync } from "node:fs";
+import { writeFileSync, mkdtempSync } from "node:fs";
 const results = [];
 for (const [name, ext, expected] of [
   ["whole", "mp4", 635],
   ["fast", "mkv", 5],
   ["precise", "mp4", 5],
 ]) {
-  const file = `.tools/integration/${name}.${ext}`;
+  let file = `.tools/integration/${name}.${ext}`;
+  let normalized = false;
+  if (name === "fast") {
+    const scan = spawnSync(
+      ".tools/bin/ffprobe",
+      [
+        "-v",
+        "error",
+        "-select_streams",
+        "v:0",
+        "-read_intervals",
+        "%+#64",
+        "-show_entries",
+        "packet=pts_time",
+        "-of",
+        "json",
+        file,
+      ],
+      { encoding: "utf8" },
+    );
+    const first = Math.min(
+      ...JSON.parse(scan.stdout)
+        .packets.map((p) => Number(p.pts_time))
+        .filter(Number.isFinite),
+    );
+    if (first > 0.25) {
+      const output = mkdtempSync(".tools/integration/verify-") + "/fast.mkv";
+      const remux = spawnSync(
+        ".tools/bin/ffmpeg",
+        [
+          "-v",
+          "error",
+          "-n",
+          "-ss",
+          String(first),
+          "-i",
+          file,
+          "-map",
+          "0",
+          "-c",
+          "copy",
+          "-avoid_negative_ts",
+          "make_zero",
+          output,
+        ],
+        { encoding: "utf8" },
+      );
+      if (remux.status !== 0)
+        throw Error("Fast timestamp normalization failed");
+      file = output;
+      normalized = true;
+    }
+  }
   const p = spawnSync(
     ".tools/bin/ffprobe",
     ["-v", "error", "-show_format", "-show_streams", "-of", "json", file],
@@ -24,11 +76,22 @@ for (const [name, ext, expected] of [
   );
   if (name === "precise" && Math.abs(duration - expected) > 0.25)
     throw Error("Precise duration exceeds tolerance");
-  if (skew > (name === "fast" ? 3 : 0.15))
-    throw Error(`Stream start skew too large: ${name}`);
+  if (skew > 0.15) throw Error(`Stream start skew too large: ${name}`);
   const decode = spawnSync(
     ".tools/bin/ffmpeg",
-    ["-v", "error", "-i", file, "-f", "null", "-"],
+    [
+      "-v",
+      "error",
+      "-i",
+      file,
+      "-fps_mode",
+      "vfr",
+      "-enc_time_base",
+      "demux",
+      "-f",
+      "null",
+      "-",
+    ],
     { encoding: "utf8" },
   );
   if (decode.status !== 0 || decode.stderr.trim())
@@ -44,6 +107,12 @@ for (const [name, ext, expected] of [
     videoCodec: video.codec_name,
     audioCodec: audio.codec_name,
     fullDecode: "PASS",
+    streamCopyTimestampNormalization: normalized,
+    ...(name === "fast"
+      ? {
+          note: "Includes keyframe pre-roll; frame-accurate boundaries require Precise Cut.",
+        }
+      : {}),
   });
 }
 writeFileSync(

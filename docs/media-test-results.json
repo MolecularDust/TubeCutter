@@ -9,19 +9,22 @@
     "height": 144,
     "videoCodec": "h264",
     "audioCodec": "opus",
-    "fullDecode": "PASS"
+    "fullDecode": "PASS",
+    "streamCopyTimestampNormalization": false
   },
   {
     "name": "fast",
     "status": "PASS",
-    "duration": 15.012,
+    "duration": 6.692,
     "expected": 5,
-    "deviation": 10.012,
-    "audioVideoStartSkew": 0,
+    "deviation": 1.6920000000000002,
+    "audioVideoStartSkew": 0.026,
     "height": 144,
     "videoCodec": "h264",
     "audioCodec": "opus",
-    "fullDecode": "PASS"
+    "fullDecode": "PASS",
+    "streamCopyTimestampNormalization": true,
+    "note": "Includes keyframe pre-roll; frame-accurate boundaries require Precise Cut."
   },
   {
     "name": "precise",
@@ -33,6 +36,7 @@
     "height": 144,
     "videoCodec": "h264",
     "audioCodec": "aac",
-    "fullDecode": "PASS"
+    "fullDecode": "PASS",
+    "streamCopyTimestampNormalization": false
   }
 ]

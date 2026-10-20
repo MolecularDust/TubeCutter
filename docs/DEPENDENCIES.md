@@ -14,7 +14,7 @@ React 19 and TypeScript render the interface. Tauri 2 owns the WKWebView, Rust c
 - Deno: MIT with third-party notices, https://github.com/denoland/deno
 - YouTube IFrame API is loaded from YouTube, subject to Google's API terms and required player behavior. Player controls remain unobstructed.
 
-`tool-manifest.json` records the versions and SHA256 hashes of the sidecars in this local build. `LICENSES` contains notices fetched from upstream. This local ad-hoc signed build is for development evaluation; public release still requires assembling complete corresponding source and third-party notices for the exact media binary builds, plus Developer ID signing and notarization. No claim of release licensing clearance is made.
+`tool-manifest.json` records the versions and SHA256 hashes of staged sidecars before the bundler applies its final signatures. `LICENSES` contains notices fetched from upstream. This local ad-hoc signed build is for development evaluation; public release still requires assembling complete corresponding source and third-party notices for the exact media binary builds, plus Developer ID signing and notarization. No claim of release licensing clearance is made.
 
 ## Player identity
 
@@ -26,10 +26,18 @@ References: https://developers.google.com/youtube/iframe_api_reference and https
 
 yt-dlp receives structured arguments with `--ignore-config` and `--` before the normalized URL. Resolution filters use equality and explicit codec filters have no quality-degrading fallback. MKV preserves a wider range of streams; remux failures are reported. MP4 Original Compatible Audio selects original AAC. Best Audio retains yt-dlp's best source audio and can fail if the muxer cannot accept it. Audio-only places the original audio stream into the selected MP4/MKV container. No Audio requires a video-only source.
 
-Sections use `--download-sections`. Fast Cut stream-copies and can land on keyframes. Precise Cut uses `--force-keyframes-at-cuts` with explicit FFmpeg output encoder settings: H.264/libx264, HEVC/libx265, AV1/libaom-av1 or VP9/libvpx-vp9, CRF 18 and AAC audio. Automatic Precise Cut uses H.264/AAC. There is no dimension scaling. FFprobe verifies duration, requested height, codec, and expected audio presence. A duration deviation is displayed, including a warning beyond 250 ms. This is a structural media check, not a perceptual lip-sync guarantee.
+Sections use `--download-sections`. Fast Cut stream-copies and can land on keyframes. Precise Cut uses `--force-keyframes-at-cuts` with explicit FFmpeg output encoder settings: H.264/libx264, HEVC/libx265, AV1/libaom-av1 or VP9/libvpx-vp9, CRF 18 and AAC audio. Automatic Precise Cut uses H.264/AAC. There is no dimension scaling. FFprobe verifies duration, requested height, codec, and expected audio presence. A duration deviation is displayed, including a warning beyond 250 ms. A local stream-copy pass aligns Fast Cut to the first retained video packet so earlier audio does not create a leading gap. Audio-only Fast Cut rejects ambiguous timestamp layouts instead of guessing. This is a structural media check, not a perceptual lip-sync guarantee.
 
 A failed section is never automatically retried as a whole-video download. Some delivery formats still transfer more data than the requested interval; byte-range savings cannot be guaranteed by yt-dlp. No hidden transcoding is performed for ordinary downloads.
 
 Unique output names and `--no-overwrites` protect existing files. Failed/canceled partial files remain for inspection. Pause/resume uses Unix process-group STOP/CONT, preserving the running process, not resumability across app restarts; server connections can expire during a long pause. Cancellation kills the entire process group and the parent is reaped. App exit cancels active downloads. Windows process-tree control and platform packaging remain future work.
 
 Browser cookie access occurs only after the user explicitly chooses a session in Account & Settings. No custom Google login exists. Raw subprocess diagnostics are classified into safe errors and never sent to the UI or logged. Settings store paths and browser choice, not cookie content. Browser authentication is not exercised during anonymous integration tests.
+
+The app bundles the Mozilla CA certificate store obtained from https://curl.se/ca/cacert.pem and passes it to media subprocesses via `SSL_CERT_FILE`. TLS certificate verification stays enabled. The packaging configuration requests ad-hoc signing of the outer macOS app as well as the standalone tools. These local signatures do not provide Developer ID trust or notarization.
+
+Signed Deno is run with `DENO_V8_FLAGS=--jitless`. A JIT-enabled hardened binary failed the runtime smoke test; interpreter mode succeeded without adding any entitlements or weakening signing restrictions. This can make JavaScript challenge solving slower.
+
+### Current release blocker
+
+The hardened ad-hoc signed yt-dlp process cannot load its embedded Python libraries. The release bundle is not functionally verified and must not be distributed as working. A dedicated sidecar-only library-validation exception is proposed in `SIGNING_APPROVAL.md` and has not been applied. Development uses the separate local development configuration.

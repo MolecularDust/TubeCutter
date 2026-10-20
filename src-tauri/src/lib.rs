@@ -60,9 +60,13 @@ fn base(s: &Settings) -> Result<std::process::Command, String> {
 }
 fn safe_error(text: &str) -> String {
     let t = text.to_lowercase();
-    if t.contains("cookie") || t.contains("keychain") || t.contains("permission") {
+    if t.contains("python shared library") || t.contains("different team ids") {
+        "The bundled downloader cannot load Python under the current macOS signature. This package needs its sidecar signing configuration corrected; use the development build in the meantime.".into()
+    } else if t.contains("certificate verify failed") {
+        "The media server certificate could not be verified. Check the bundled certificate store and network trust settings. Certificate verification was not bypassed.".into()
+    } else if t.contains("cookie") || t.contains("keychain") || t.contains("permission") {
         "Browser cookies are unavailable. Check the browser installation, macOS permissions, and cookie store; alternatively import a Netscape cookies file.".into()
-    } else if t.contains("sign in") || t.contains("403") || t.contains("private") {
+    } else if t.contains("sign in") || t.contains("http error 403") || t.contains("private video") {
         "YouTube denied access. The video may require authentication, or this network may be restricted.".into()
     } else if t.contains("format") {
         "The exact requested format is unavailable. Choose a format listed by Analyze; no lower quality was substituted.".into()
@@ -194,7 +198,13 @@ fn download(
                 } else {
                     "ba"
                 };
-                format!("{video}+{a}/{}", video.replacen("bv", "b", 1))
+                let combined = video.replacen("bv", "b", 1);
+                let combined = if r.audio == "original" && r.container == "mp4" {
+                    format!("{combined}[acodec^=mp4a]")
+                } else {
+                    combined
+                };
+                format!("{video}+{a}/{combined}")
             }
         };
         c.args([
@@ -220,7 +230,14 @@ fn download(
                 };
                 c.args([
                     "--downloader-args",
-                    &format!("ffmpeg_o:-progress pipe:1 -nostats -c:v {encoder} -crf 18 -c:a aac"),
+                    &format!(
+                        "ffmpeg_o:-progress pipe:1 -nostats -c:v {encoder} -crf 18 -c:a aac -f {}",
+                        if r.container == "mkv" {
+                            "matroska"
+                        } else {
+                            "mp4"
+                        }
+                    ),
                 ]);
             } else {
                 c.args(["--downloader-args", "ffmpeg_o:-progress pipe:1 -nostats"]);
@@ -314,7 +331,7 @@ fn download(
             return Err("Downloader returned no output file".into());
         }
         if r.section.is_some() && !r.precise {
-            normalize_fast(&app, &jobs, &id, &path)?;
+            normalize_fast(&app, &jobs, &id, &path, &r)?;
             if jobs.lock().unwrap()[&id].state == "canceled" {
                 return Ok(());
             }
@@ -411,15 +428,22 @@ fn normalize_fast(
     jobs: &Arc<Mutex<HashMap<String, Job>>>,
     id: &str,
     path: &str,
+    request: &Request,
 ) -> Result<(), String> {
     let scan = platform::command("ffprobe")?
         .args([
             "-v",
             "error",
+            "-select_streams",
+            if request.mode == "audio" {
+                "a:0"
+            } else {
+                "v:0"
+            },
             "-read_intervals",
             "%+#64",
             "-show_entries",
-            "packet=pts_time",
+            "packet=pts_time:format=duration",
             "-of",
             "json",
             path,
@@ -436,6 +460,24 @@ fn normalize_fast(
         .filter(|n| n.is_finite())
         .reduce(f64::min)
         .ok_or("Clip has no media packets")?;
+    let mut first = first;
+    if request.mode == "audio" {
+        if let Some([a, b]) = request.section {
+            let duration = v["format"]["duration"]
+                .as_str()
+                .and_then(|s| s.parse::<f64>().ok())
+                .ok_or("Audio clip duration is unavailable")?;
+            if (duration - (b - a)).abs() > 0.25 {
+                if (duration - b).abs() < 0.25 && first.abs() < 0.25 {
+                    first = a;
+                } else {
+                    return Err(
+                        "Fast Cut audio timestamps could not be aligned. Use Precise Cut.".into(),
+                    );
+                }
+            }
+        }
+    }
     if first <= 0.25 {
         return Ok(());
     }
@@ -657,4 +699,28 @@ pub fn run() {
             }
         }
     });
+}
+
+#[cfg(test)]
+mod error_tests {
+    use super::*;
+    #[test]
+    fn sensitive_diagnostics_are_not_reflected() {
+        let e = safe_error("Cookie decryption failed: SECRET_VALUE /private/auth-file.txt");
+        assert!(!e.contains("SECRET_VALUE"));
+        assert!(!e.contains("auth-file"));
+        assert!(e.contains("Browser cookies"));
+    }
+    #[test]
+    fn native_packaging_is_not_misreported_as_authentication() {
+        let e = safe_error(
+            "Failed to load Python shared library /private/temp/Python: different Team IDs",
+        );
+        assert!(e.contains("signature"));
+        assert!(!e.contains("YouTube denied"));
+    }
+    #[test]
+    fn macos_private_paths_do_not_imply_private_videos() {
+        assert!(!safe_error("/private/var/tmp: unexpected failure").contains("YouTube denied"));
+    }
 }

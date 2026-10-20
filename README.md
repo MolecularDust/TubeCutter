@@ -2,6 +2,8 @@
 
 A native Tauri 2 + React + Rust desktop application for authorized YouTube downloads, embedded preview, section selection, and a managed download queue. macOS Apple Silicon is the current build target. See [test results](docs/TEST_RESULTS.md) for what has actually been verified.
 
+**Current release status:** the local development application is functional. The hardened release `.app`/`.dmg` builds and passes signature/image integrity checks, but yt-dlp cannot load its bundled Python library under that signature. Do not treat the release package as functional until the narrowly scoped approval in [SIGNING_APPROVAL.md](docs/SIGNING_APPROVAL.md) is resolved and verified. No signing exception has been applied.
+
 ## Run
 
 Requires Node.js 22.12+ and Xcode Command Line Tools for development. This workspace has project-local Rust under `.tools`; no shell profile was changed.
@@ -15,7 +17,15 @@ npm run desktop
 
 On a fresh checkout, install Rust using https://rustup.rs or install it locally with `CARGO_HOME="$PWD/.tools/cargo" RUSTUP_HOME="$PWD/.tools/rustup"` and `--no-modify-path`. The desktop script uses project-local Rust when present. Place trusted standalone yt-dlp, FFmpeg, FFprobe and Deno binaries in `.tools/bin`. Development also searches PATH and conventional Homebrew locations; packaged builds use only adjacent bundled executables.
 
-## Build
+## Local development app bundle
+
+```sh
+npm run package:dev
+```
+
+This produces a local development `.app` at `src-tauri/target/debug/bundle/macos/Video Downloader.app`. It uses the development signing posture, not the hardened distribution configuration. It is suitable for local evaluation, not public distribution.
+
+## Release build
 
 ```sh
 npm run package

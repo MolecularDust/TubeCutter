@@ -141,13 +141,13 @@ function App() {
     const h = (e: KeyboardEvent) => {
       if (
         (e.target as HTMLElement).closest(
-          "input,textarea,select,button,[contenteditable]",
+          "input,textarea,select,[contenteditable]",
         ) ||
         showSettings ||
         !ready
       )
         return;
-      if (e.code === "Space") {
+      if (e.code === "Space" && !(e.target as HTMLElement).closest("button")) {
         e.preventDefault();
         send("toggle");
       }
@@ -649,8 +649,14 @@ function App() {
                   <div className="job-status">
                     <span>{j.state}</span>
                     <span>
-                      {j.progress.toFixed(1)}% · {j.bytes} · {j.speed}{" "}
-                      {j.eta && `· ${j.eta} remaining`}
+                      {[
+                        `${j.progress.toFixed(1)}%`,
+                        j.bytes,
+                        j.speed,
+                        j.eta ? `${j.eta} remaining` : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
                     </span>
                   </div>
                   <progress value={j.progress} max="100" />
