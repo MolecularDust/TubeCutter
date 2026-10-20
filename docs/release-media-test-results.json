@@ -1,0 +1,42 @@
+[
+  {
+    "name": "whole",
+    "status": "PASS",
+    "duration": 634.594,
+    "expected": 635,
+    "deviation": -0.40599999999994907,
+    "audioVideoStartSkew": 0,
+    "height": 144,
+    "videoCodec": "h264",
+    "audioCodec": "opus",
+    "fullDecode": "PASS",
+    "streamCopyTimestampNormalization": false
+  },
+  {
+    "name": "fast",
+    "status": "PASS",
+    "duration": 6.692,
+    "expected": 5,
+    "deviation": 1.6920000000000002,
+    "audioVideoStartSkew": 0.026,
+    "height": 144,
+    "videoCodec": "h264",
+    "audioCodec": "opus",
+    "fullDecode": "PASS",
+    "streamCopyTimestampNormalization": true,
+    "note": "Includes keyframe pre-roll; frame-accurate boundaries require Precise Cut."
+  },
+  {
+    "name": "precise",
+    "status": "PASS",
+    "duration": 5,
+    "expected": 5,
+    "deviation": 0,
+    "audioVideoStartSkew": 0,
+    "height": 144,
+    "videoCodec": "h264",
+    "audioCodec": "aac",
+    "fullDecode": "PASS",
+    "streamCopyTimestampNormalization": false
+  }
+]

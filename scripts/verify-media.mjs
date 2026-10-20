@@ -1,16 +1,19 @@
 import { spawnSync } from "node:child_process";
 import { writeFileSync, mkdtempSync } from "node:fs";
+import { resolve, join } from "node:path";
+const toolDir = resolve(process.env.MEDIA_BIN_DIR ?? ".tools/bin");
+const testDir = resolve(process.env.MEDIA_TEST_DIR ?? ".tools/integration");
 const results = [];
 for (const [name, ext, expected] of [
   ["whole", "mp4", 635],
   ["fast", "mkv", 5],
   ["precise", "mp4", 5],
 ]) {
-  let file = `.tools/integration/${name}.${ext}`;
+  let file = join(testDir, `${name}.${ext}`);
   let normalized = false;
   if (name === "fast") {
     const scan = spawnSync(
-      ".tools/bin/ffprobe",
+      join(toolDir, "ffprobe"),
       [
         "-v",
         "error",
@@ -32,9 +35,9 @@ for (const [name, ext, expected] of [
         .filter(Number.isFinite),
     );
     if (first > 0.25) {
-      const output = mkdtempSync(".tools/integration/verify-") + "/fast.mkv";
+      const output = mkdtempSync(join(testDir, "verify-")) + "/fast.mkv";
       const remux = spawnSync(
-        ".tools/bin/ffmpeg",
+        join(toolDir, "ffmpeg"),
         [
           "-v",
           "error",
@@ -60,7 +63,7 @@ for (const [name, ext, expected] of [
     }
   }
   const p = spawnSync(
-    ".tools/bin/ffprobe",
+    join(toolDir, "ffprobe"),
     ["-v", "error", "-show_format", "-show_streams", "-of", "json", file],
     { encoding: "utf8" },
   );
@@ -78,7 +81,7 @@ for (const [name, ext, expected] of [
     throw Error("Precise duration exceeds tolerance");
   if (skew > 0.15) throw Error(`Stream start skew too large: ${name}`);
   const decode = spawnSync(
-    ".tools/bin/ffmpeg",
+    join(toolDir, "ffmpeg"),
     [
       "-v",
       "error",
@@ -116,7 +119,7 @@ for (const [name, ext, expected] of [
   });
 }
 writeFileSync(
-  "docs/media-test-results.json",
+  process.env.MEDIA_TEST_REPORT ?? "docs/media-test-results.json",
   JSON.stringify(results, null, 2) + "\n",
 );
 console.log(JSON.stringify(results, null, 2));

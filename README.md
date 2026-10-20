@@ -2,7 +2,7 @@
 
 A native Tauri 2 + React + Rust desktop application for authorized YouTube downloads, embedded preview, section selection, and a managed download queue. macOS Apple Silicon is the current build target. See [test results](docs/TEST_RESULTS.md) for what has actually been verified.
 
-**Current release status:** the local development application is functional. The hardened release `.app`/`.dmg` builds and passes signature/image integrity checks, but yt-dlp cannot load its bundled Python library under that signature. Do not treat the release package as functional until the narrowly scoped approval in [SIGNING_APPROVAL.md](docs/SIGNING_APPROVAL.md) is resolved and verified. No signing exception has been applied.
+**Current release status:** the macOS Apple Silicon `.app` and `.dmg` are functional local evaluation builds. Signed-tool metadata/download tests and signature/image integrity checks pass. The user-approved library-validation exception applies only to yt-dlp; the main app retains validation and Deno runs with JIT disabled. See [signing details](docs/SIGNING_APPROVAL.md). The build is ad-hoc signed, not Developer ID signed or notarized.
 
 ## Run
 
@@ -31,7 +31,7 @@ This produces a local development `.app` at `src-tauri/target/debug/bundle/macos
 npm run package
 ```
 
-This prepares target-suffixed sidecars, rejects Homebrew-linked executables, ad-hoc signs local copies, builds the frontend, compiles Rust, and creates `.app` / `.dmg` artifacts under `src-tauri/target/release/bundle`. End users do not need Node, Python, Rust, Deno, yt-dlp or FFmpeg installed separately. Production signing and notarization require your own Apple Developer identity; the local build is not notarized.
+This prepares target-suffixed sidecars, rejects Homebrew-linked executables, builds the frontend/native app, applies the approved exception only to yt-dlp, re-seals the outer app without broadening other executables' entitlements, verifies the signed runtimes, and creates/checks the DMG. Artifacts are under `src-tauri/target/release/bundle`; final executable/image hashes are in `docs/release-artifacts.json`. End users do not need Node, Python, Rust, Deno, yt-dlp or FFmpeg installed separately. Production signing and notarization require your own Apple Developer identity; the local build is not notarized.
 
 Binaries are excluded from Git. The installed versions/hashes are recorded in `docs/tool-manifest.json`. See `scripts/install-tools.mjs` for reproducible downloads for this target and `docs/DEPENDENCIES.md` for source provenance and licensing obligations. Future x64 macOS, Windows and Linux builds need target-specific tool distributions, process control verification, and native CI; they are not verified here.
 

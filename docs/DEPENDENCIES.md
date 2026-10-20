@@ -38,6 +38,8 @@ The app bundles the Mozilla CA certificate store obtained from https://curl.se/c
 
 Signed Deno is run with `DENO_V8_FLAGS=--jitless`. A JIT-enabled hardened binary failed the runtime smoke test; interpreter mode succeeded without adding any entitlements or weakening signing restrictions. This can make JavaScript challenge solving slower.
 
-### Current release blocker
+### Approved yt-dlp signing exception
 
-The hardened ad-hoc signed yt-dlp process cannot load its embedded Python libraries. The release bundle is not functionally verified and must not be distributed as working. A dedicated sidecar-only library-validation exception is proposed in `SIGNING_APPROVAL.md` and has not been applied. Development uses the separate local development configuration.
+On 20 October 2026, the user approved `com.apple.security.cs.disable-library-validation` only for yt-dlp, allowing its PyInstaller process to load bundled Python libraries with different signing identities. `scripts/package-macos.mjs` signs that executable with `src-tauri/yt-dlp.entitlements.plist`, then re-seals the main app without recursively re-signing the other executables. It verifies that the exception is absent from the main app, FFmpeg, FFprobe, and Deno, and that no JIT entitlement is present. Hardened runtime remains enabled. No system-wide setting, Keychain permission, or Gatekeeper exception is changed.
+
+The packaging workflow verifies the signed yt-dlp and Deno runtimes before creating the DMG. Release media integration uses the exact packaged executables, bundled CA store, and JIT-disabled environment. `release-artifacts.json` records hashes after final signing; `release-media-test-results.json` records real output inspection and decode results. See `SIGNING_APPROVAL.md` for the scope and risk of the approved exception.

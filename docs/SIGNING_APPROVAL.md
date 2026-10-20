@@ -1,16 +1,16 @@
-# Release signing blocker and proposed approval
+# Approved yt-dlp signing exception
 
-The development application is functional. The hardened, ad-hoc signed release artifact currently fails to load yt-dlp's embedded Python library: its PyInstaller bootloader and bundled Python components have incompatible signing identities under macOS library validation.
-
-The proposed change requires user approval: add the following entitlement **only to the separate yt-dlp executable**:
+On 20 October 2026, the user explicitly approved adding the following entitlement **only to the separate yt-dlp executable**:
 
 ```xml
 <key>com.apple.security.cs.disable-library-validation</key>
 <true/>
 ```
 
-This permits that process to map its bundled Python libraries without matching Team IDs. It also removes same-Team library enforcement for that process, which reduces protection against library injection. The main Tauri app, FFmpeg, FFprobe, and Deno would retain their current validation settings. Deno continues to run with JIT disabled; no JIT entitlement is proposed.
+It permits yt-dlp's PyInstaller process to map its bundled Python libraries without matching Team IDs. It also removes same-Team library enforcement for that process, reducing protection against library injection. This scope was presented to and approved by the user.
 
-Concrete implementation after approval: build the app, sign only yt-dlp with a dedicated entitlement file, re-seal the outer app without re-signing its children, verify signatures and actual metadata/download behavior, and regenerate the DMG from that verified app. No system-wide macOS setting, Keychain permission, or Gatekeeper exception would be changed.
+The main Tauri app, FFmpeg, FFprobe, and Deno retain library validation. All executables retain hardened runtime. Deno runs with JIT disabled; no JIT entitlement is used. No system-wide macOS setting, Keychain permission, or Gatekeeper exception is changed.
 
-Automatic approval review rejected an earlier JIT entitlement proposal. That proposal is abandoned; interpreter-mode Deno passed its signed runtime check. This request concerns the separate embedded-Python library-loading problem discovered afterward.
+`src-tauri/yt-dlp.entitlements.plist` contains the dedicated entitlement. `scripts/package-macos.mjs` builds the app, signs only yt-dlp with it, re-seals the outer app without recursively re-signing other executables, and verifies the exact entitlement scope and hardened-runtime flags. It checks the signed runtimes, creates a DMG from the verified app, verifies image integrity, and records final executable/image hashes.
+
+The previous embedded-Python signing blocker is resolved. Anonymous metadata extraction and whole/section downloads have passed using the signed release executables; the signed release window also analyzed the public test video successfully. Developer ID signing/notarization and full licensing/source assembly for public redistribution remain separate release work.

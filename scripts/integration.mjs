@@ -1,16 +1,17 @@
 import { spawn } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
-import { resolve } from "node:path";
-const out = resolve(".tools/integration");
+import { resolve, join } from "node:path";
+const toolDir = resolve(process.env.MEDIA_BIN_DIR ?? ".tools/bin");
+const out = resolve(process.env.MEDIA_TEST_DIR ?? ".tools/integration");
 mkdirSync(out, { recursive: true });
 const common = [
   "--ignore-config",
   "--no-playlist",
   "--no-cache-dir",
   "--js-runtimes",
-  `deno:${resolve(".tools/bin/deno")}`,
+  `deno:${join(toolDir, "deno")}`,
   "--ffmpeg-location",
-  resolve(".tools/bin"),
+  toolDir,
   "--socket-timeout",
   "20",
   "--retries",
@@ -30,8 +31,21 @@ const common = [
 ];
 const video = "https://www.youtube.com/watch?v=aqz-KE-bpKQ";
 async function run(name, args) {
-  return await new Promise((resolve) => {
-    const c = spawn(".tools/bin/yt-dlp", [...common, ...args, "--", video]);
+  return await new Promise((finish, reject) => {
+    const c = spawn(
+      join(toolDir, "yt-dlp"),
+      [...common, ...args, "--", video],
+      {
+        env: {
+          ...process.env,
+          DENO_V8_FLAGS: "--jitless",
+          SSL_CERT_FILE: resolve(
+            process.env.MEDIA_CA_FILE ?? "src-tauri/resources/cacert.pem",
+          ),
+        },
+      },
+    );
+    c.on("error", reject);
     let log = "";
     c.stdout.on("data", (d) => {
       log += d;
@@ -43,7 +57,7 @@ async function run(name, args) {
     });
     c.on("close", (code) => {
       writeFileSync(`${out}/${name}.log`, log);
-      resolve(code);
+      finish(code);
     });
   });
 }
@@ -85,7 +99,7 @@ for (const [name, args] of [
       "*10-15",
       "--force-keyframes-at-cuts",
       "--downloader-args",
-      "ffmpeg_o:-progress pipe:1 -nostats -c:v libx264 -crf 18 -c:a aac",
+      "ffmpeg_o:-progress pipe:1 -nostats -c:v libx264 -crf 18 -c:a aac -f mp4",
       "-o",
       "precise.%(ext)s",
     ],
