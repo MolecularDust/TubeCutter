@@ -115,3 +115,7 @@ Clear Completed is enabled when either completed or canceled rows exist and clea
 Progress details now show percentage, speed in decimal Kbit/s, Mbit/s, or Gbit/s, and downloaded size in B/KB/MB/GB. yt-dlp reports raw bytes per second for conversion (multiplied by8); FFmpeg section downloads use measured output throughput. Completion records the actual final file size. For example,16252972bytes displays as16.3MB rather than a long raw byte count.
 
 Eight frontend tests and fifteen native tests pass, with production build, lint, formatting, and strict Clippy. Native coverage includes clearing canceled/completed rows while retaining worker state, preserving other job states, bit-rate units through Gbit/s, and readable size conversion. No fresh native queue interaction or live transfer was run for this follow-up.
+
+## Edited filename in queue
+
+Queue titles now use the edited output filename, including the selected container extension, from the moment a job is enqueued. Unedited downloads keep the original video title. The queue uses the same filename normalization as final output, including retries. Native compilation passes; this display fix reuses the existing filename validation and normalization coverage.

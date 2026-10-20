@@ -601,7 +601,12 @@ fn enqueue(app: tauri::AppHandle, s: State<Backend>, request: Request) -> Result
     let id = uuid::Uuid::new_v4().to_string();
     let job = Job {
         id: id.clone(),
-        title: request.title.clone(),
+        title: request
+            .file_name
+            .as_deref()
+            .map(|name| output_file_name(name, &request.container))
+            .transpose()?
+            .unwrap_or_else(|| request.title.clone()),
         state: "queued".into(),
         progress: 0.,
         speed: String::new(),
