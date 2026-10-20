@@ -1,3 +1,4 @@
+mod download_files;
 mod model;
 mod platform;
 mod player;
@@ -164,14 +165,16 @@ fn download(
     s: Settings,
 ) {
     let r = jobs.lock().unwrap()[&id].request.clone();
+    let mut files = None;
     let result = (|| -> Result<(), String> {
         let mut c = base(&s)?;
         let destination = PathBuf::from(&r.destination)
             .canonicalize()
             .map_err(|_| "Destination is unavailable")?;
-        // A unique job prefix prevents overwrites and keeps all output inside the selected directory.
+        files = Some(download_files::DownloadFiles::new(&destination)?);
+        let staging = files.as_ref().unwrap();
         let template = format!("%(title).100B [%(id)s] - {}.%(ext)s", &id[..8]);
-        c.arg("--paths").arg(&destination);
+        c.arg("--paths").arg(&staging.directory);
         c.args(["--no-quiet","--newline","--progress","--no-overwrites","--restrict-filenames","--continue","--progress-template","download:PROGRESS|%(progress._percent_str)s|%(progress._speed_str)s|%(progress._downloaded_bytes_str)s|%(progress._eta_str)s","--print","after_move:FILE|%(filepath)s","-o"]).arg(template);
         let mut video = String::from("bv");
         if let Some(h) = r.resolution {
@@ -401,16 +404,41 @@ fn download(
                 return Err("Output dimensions differ from the requested resolution".into());
             }
         }
-        update(&app, &jobs, &id, |j| {
-            j.state = "completed".into();
-            j.progress = 100.;
-            j.speed.clear();
-            j.eta.clear();
-            j.message = message;
-            j.pid = 0;
-        });
+        // Serialize publishing and completion with Cancel: a canceled job never publishes output.
+        let mut map = jobs.lock().unwrap();
+        let j = map.get_mut(&id).ok_or("Unknown download")?;
+        if j.state == "canceled" {
+            return Ok(());
+        }
+        let final_path = staging.publish(std::path::Path::new(&path))?;
+        j.path = final_path.to_string_lossy().into_owned();
+        j.state = "completed".into();
+        j.progress = 100.;
+        j.speed.clear();
+        j.eta.clear();
+        j.message = message;
+        j.pid = 0;
+        let _ = app.emit("job", j.clone());
         Ok(())
     })();
+    // The worker reaches here only after its media processes have exited.
+    if let Some(files) = files.as_ref() {
+        let cleanup = files.cleanup();
+        update(&app, &jobs, &id, |j| {
+            if j.state == "canceled" {
+                j.path.clear();
+                j.speed.clear();
+                j.eta.clear();
+                j.pid = 0;
+                j.message = match cleanup {
+                    Ok(()) => "Canceled. Partial download files deleted.".into(),
+                    Err(e) => e,
+                };
+            } else if let Err(e) = cleanup {
+                j.message = format!("{} {e}", j.message);
+            }
+        });
+    }
     if let Err(e) = result {
         update(&app, &jobs, &id, |j| {
             if j.state != "canceled" {
@@ -531,9 +559,7 @@ fn normalize_fast(
         return Ok(());
     }
     if !output.status.success() {
-        return Err(
-            "Cannot normalize clip timestamps; the original partial output was retained".into(),
-        );
+        return Err("Cannot normalize clip timestamps. Use Precise Cut".into());
     }
     std::fs::rename(temp, p).map_err(|_| "Cannot finalize normalized clip")?;
     Ok(())

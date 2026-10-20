@@ -807,3 +807,9 @@ fieldset.trim-details:disabled {
   font-size: 22px;
   line-height: 1;
 }
+
+.queue-canceled {
+  color: #d64545;
+  font-size: 22px;
+  line-height: 1;
+}

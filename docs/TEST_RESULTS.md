@@ -85,3 +85,9 @@ Frontend production build, lint, and all eight source tests pass. No additional 
 ## Completed queue indicator follow-up
 
 Completed downloads now replace the spinner with the original checkmark inside the same square tile. Downloading, merging, and processing retain the animated spinner. Frontend production build and lint pass; this conditional presentation change does not alter download processing.
+
+## Cancellation cleanup and red X
+
+Canceled jobs replace the spinner with a red X. Each new download stages all media, partial streams, subtitles, and normalization intermediates in a unique hidden folder inside the selected destination. Once the worker's media processes exit, it deletes that folder. Only verified completed output is published into the destination, without overwriting an existing file. Publishing and completion share the cancellation lock, so cancellation cannot race with publishing a completed video. Cleanup failures are shown in the canceled job's message rather than reported as successful deletion.
+
+All eight frontend tests and eleven native tests pass. Three new native filesystem tests cover removing partial/intermediate files, preserving unrelated files and symlink targets, and publishing completed output without overwriting it. Frontend build/lint, Rust formatting, and strict Clippy pass. The existing process-group cancellation test also passes. No new live YouTube cancellation was exercised for this follow-up; filesystem cleanup and process cancellation were checked separately. Already-existing files from older app sessions are not swept by filename.

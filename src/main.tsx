@@ -699,6 +699,8 @@ function App() {
                 <div className="job-icon" aria-hidden="true">
                   {j.state === "completed" ? (
                     <span className="queue-checkmark">✓</span>
+                  ) : j.state === "canceled" ? (
+                    <span className="queue-canceled">✕</span>
                   ) : (
                     <span
                       className={`queue-spinner${["downloading", "merging", "processing"].includes(j.state) ? " is-spinning" : ""}`}
