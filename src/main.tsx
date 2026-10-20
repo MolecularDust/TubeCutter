@@ -696,8 +696,10 @@ function App() {
           ) : (
             jobs.map((j) => (
               <article className="job" key={j.id}>
-                <div className="job-icon">
-                  {j.state === "completed" ? "✓" : "↓"}
+                <div className="job-icon" aria-hidden="true">
+                  <span
+                    className={`queue-spinner${["downloading", "merging", "processing"].includes(j.state) ? " is-spinning" : ""}`}
+                  />
                 </div>
                 <div className="job-body">
                   <strong>{j.title}</strong>

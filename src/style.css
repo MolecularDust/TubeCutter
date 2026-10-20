@@ -354,10 +354,9 @@ input::placeholder {
 }
 .trim-controls {
   display: grid;
-  grid-template-columns: repeat(3, minmax(110px, 140px)) minmax(
-      0,
-      1fr
-    ) auto auto;
+  grid-template-columns:
+    repeat(3, minmax(110px, 140px)) minmax(0, 1fr)
+    auto auto;
   grid-template-rows: 28px 34px auto;
   column-gap: 12px;
   row-gap: 6px;
@@ -575,11 +574,29 @@ kbd {
   align-items: center;
 }
 .job-icon {
-  font-size: 22px;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  display: grid;
+  place-items: center;
   color: var(--accent);
-  padding: 8px;
-  border-radius: 9px;
+  border-radius: 6px;
   background: var(--input);
+}
+.queue-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+}
+.queue-spinner.is-spinning {
+  animation: analyze-spin 0.75s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .queue-spinner.is-spinning {
+    animation-duration: 2s;
+  }
 }
 .job-body {
   flex: 1;
