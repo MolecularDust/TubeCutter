@@ -81,3 +81,7 @@ Rendered browser-preview geometry confirmed that all three inputs and both actio
 Queue rows now use a fixed40×40px square status container with a spinner instead of the checkmark/down arrow. Its animation is driven by native job state: downloading, merging, and processing animate; queued, paused, completed, failed, and canceled are stationary. Completion therefore stops the spinner only after final processing/verification completes, rather than at100% transfer progress. The textual job status remains available to screen readers.
 
 Frontend production build, lint, and all eight source tests pass. No additional media download was run for this presentation change.
+
+## Completed queue indicator follow-up
+
+Completed downloads now replace the spinner with the original checkmark inside the same square tile. Downloading, merging, and processing retain the animated spinner. Frontend production build and lint pass; this conditional presentation change does not alter download processing.

@@ -802,3 +802,8 @@ fieldset.trim-details:disabled {
     animation-duration: 2s;
   }
 }
+
+.queue-checkmark {
+  font-size: 22px;
+  line-height: 1;
+}
