@@ -709,7 +709,9 @@ function App() {
               Download queue <span className="count">{jobs.length}</span>
             </h2>
             <button
-              disabled={!jobs.some((j) => j.state === "completed")}
+              disabled={
+                !jobs.some((j) => ["completed", "canceled"].includes(j.state))
+              }
               onClick={() =>
                 act(async () => {
                   await invoke("clear_completed");
@@ -750,6 +752,7 @@ function App() {
                       {[
                         `${j.progress.toFixed(1)}%`,
                         j.speed,
+                        j.bytes,
                         j.eta ? `${j.eta} remaining` : "",
                       ]
                         .filter(Boolean)

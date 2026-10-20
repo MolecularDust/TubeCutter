@@ -41,6 +41,8 @@ pub struct Job {
     pub pid: u32,
     #[serde(skip)]
     pub request: Request,
+    #[serde(skip)]
+    pub hidden: bool,
 }
 pub fn normalize(input: &str) -> Result<String, String> {
     let u = url::Url::parse(input.trim()).map_err(|_| "Enter a valid YouTube URL")?;
@@ -172,6 +174,44 @@ mod selection_tests {
         assert!(validate(&r).is_err());
     }
     #[test]
+    fn clearing_hides_completed_and_canceled_but_preserves_active_and_failed_jobs() {
+        let mut jobs = std::collections::HashMap::new();
+        for state in [
+            "completed",
+            "canceled",
+            "downloading",
+            "queued",
+            "paused",
+            "failed",
+        ] {
+            jobs.insert(
+                state.to_string(),
+                Job {
+                    id: state.into(),
+                    title: "Test".into(),
+                    state: state.into(),
+                    progress: 0.,
+                    speed: String::new(),
+                    bytes: String::new(),
+                    eta: String::new(),
+                    message: String::new(),
+                    path: String::new(),
+                    pid: 0,
+                    request: request(),
+                    hidden: false,
+                },
+            );
+        }
+        clear_finished(&mut jobs);
+        assert!(jobs["completed"].hidden);
+        assert!(jobs["canceled"].hidden);
+        for state in ["downloading", "queued", "paused", "failed"] {
+            assert!(!jobs[state].hidden);
+        }
+        // Canceled worker state remains available until its process/files are cleaned up.
+        assert_eq!(jobs["canceled"].state, "canceled");
+    }
+    #[test]
     fn reject_nonfinite_duration() {
         let mut r = request();
         r.duration = f64::INFINITY;
@@ -241,23 +281,47 @@ pub fn format_speed(bytes_per_second: f64) -> String {
     if !bytes_per_second.is_finite() || bytes_per_second < 0. {
         return String::new();
     }
-    let (value, unit) = if bytes_per_second >= 1_048_576. {
-        (bytes_per_second / 1_048_576., "MiB/s")
-    } else if bytes_per_second >= 1024. {
-        (bytes_per_second / 1024., "KiB/s")
+    let bits = bytes_per_second * 8.;
+    let (value, unit) = if bits >= 1_000_000_000. {
+        (bits / 1_000_000_000., "Gbit/s")
+    } else if bits >= 1_000_000. {
+        (bits / 1_000_000., "Mbit/s")
     } else {
-        (bytes_per_second, "B/s")
+        (bits / 1000., "Kbit/s")
     };
     format!("{value:.1} {unit}")
 }
+pub fn format_size(bytes: u64) -> String {
+    if bytes >= 1_000_000_000 {
+        format!("{:.1} GB", bytes as f64 / 1_000_000_000.)
+    } else if bytes >= 1_000_000 {
+        format!("{:.1} MB", bytes as f64 / 1_000_000.)
+    } else if bytes >= 1000 {
+        format!("{:.1} KB", bytes as f64 / 1000.)
+    } else {
+        format!("{bytes} B")
+    }
+}
+pub fn clear_finished(jobs: &mut std::collections::HashMap<String, Job>) {
+    // Retain internal records while canceled workers finish cleanup; hide all later events.
+    for job in jobs.values_mut() {
+        if ["completed", "canceled"].contains(&job.state.as_str()) {
+            job.hidden = true;
+        }
+    }
+}
+
 #[cfg(test)]
 mod speed_tests {
     use super::*;
     #[test]
     fn formats_transfer_speed_in_units_per_second() {
-        assert_eq!(format_speed(512.), "512.0 B/s");
-        assert_eq!(format_speed(2048.), "2.0 KiB/s");
-        assert_eq!(format_speed(2.5 * 1_048_576.), "2.5 MiB/s");
+        assert_eq!(format_speed(512.), "4.1 Kbit/s");
+        assert_eq!(format_speed(2048.), "16.4 Kbit/s");
+        assert_eq!(format_speed(2.5 * 1_048_576.), "21.0 Mbit/s");
+        assert_eq!(format_speed(250_000_000.), "2.0 Gbit/s");
+        assert_eq!(format_size(16_252_972), "16.3 MB");
+        assert_eq!(format_size(1234), "1.2 KB");
         assert_eq!(format_speed(f64::NAN), "");
         assert_eq!(format_speed(-1.), "");
     }

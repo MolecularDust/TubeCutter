@@ -107,3 +107,11 @@ The Precise Cut row is now a plain container rather than a wrapping label. Only 
 Section download mode is checked by default; its controls still wait for a processed video link. The queue no longer displays accumulated bytes. Normal yt-dlp downloads show the downloader's reported speed. FFmpeg section downloads sample output-byte changes over elapsed wall time and show effective output throughput in B/s, KiB/s, or MiB/s, rather than FFmpeg's media-playback speed multiplier. Completed jobs clear the speed as before.
 
 Frontend build/lint, eight frontend tests, fourteen native tests, formatting, and strict Clippy pass. The new native test covers rate units and invalid values. No live transfer was run for this follow-up.
+
+## Clearing canceled rows and revised progress details
+
+Clear Completed is enabled when either completed or canceled rows exist and clears both from the visible queue. Internal finished records remain session-local and hidden so clearing a canceled row cannot remove state that its worker still needs for process/file cleanup. Hidden rows are excluded from queue reads and subsequent job events. Active, queued, paused, and failed rows remain visible.
+
+Progress details now show percentage, speed in decimal Kbit/s, Mbit/s, or Gbit/s, and downloaded size in B/KB/MB/GB. yt-dlp reports raw bytes per second for conversion (multiplied by8); FFmpeg section downloads use measured output throughput. Completion records the actual final file size. For example,16252972bytes displays as16.3MB rather than a long raw byte count.
+
+Eight frontend tests and fifteen native tests pass, with production build, lint, formatting, and strict Clippy. Native coverage includes clearing canceled/completed rows while retaining worker state, preserving other job states, bit-rate units through Gbit/s, and readable size conversion. No fresh native queue interaction or live transfer was run for this follow-up.

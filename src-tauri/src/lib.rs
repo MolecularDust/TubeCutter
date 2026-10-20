@@ -155,7 +155,9 @@ fn update(
         if canceled {
             j.state = "canceled".into();
         }
-        let _ = app.emit("job", j.clone());
+        if !j.hidden {
+            let _ = app.emit("job", j.clone());
+        }
     }
 }
 fn download(
@@ -175,7 +177,7 @@ fn download(
         let staging = files.as_ref().unwrap();
         let template = format!("%(title).100B [%(id)s] - {}.%(ext)s", &id[..8]);
         c.arg("--paths").arg(&staging.directory);
-        c.args(["--no-quiet","--newline","--progress","--no-overwrites","--restrict-filenames","--continue","--progress-template","download:PROGRESS|%(progress._percent_str)s|%(progress._speed_str)s|%(progress._downloaded_bytes_str)s|%(progress._eta_str)s","--print","after_move:FILE|%(filepath)s","-o"]).arg(template);
+        c.args(["--no-quiet","--newline","--progress","--no-overwrites","--restrict-filenames","--continue","--progress-template","download:PROGRESS|%(progress._percent_str)s|%(progress.speed)s|%(progress.downloaded_bytes)s|%(progress._eta_str)s","--print","after_move:FILE|%(filepath)s","-o"]).arg(template);
         let mut video = String::from("bv");
         if let Some(h) = r.resolution {
             video.push_str(&format!("[height={h}]"));
@@ -261,7 +263,9 @@ fn download(
             }
             j.pid = child.id();
             j.state = "downloading".into();
-            let _ = app.emit("job", j.clone());
+            if !j.hidden {
+                let _ = app.emit("job", j.clone());
+            }
         }
         let stderr = child.stderr.take().unwrap();
         let errors = std::thread::spawn(move || {
@@ -290,6 +294,7 @@ fn download(
                 }
             } else if let Some(bytes) = line.strip_prefix("total_size=") {
                 if let Ok(bytes) = bytes.parse::<u64>() {
+                    update(&app, &jobs, &id, |j| j.bytes = format_size(bytes));
                     let elapsed = rate_sample.elapsed().as_secs_f64();
                     if elapsed >= 0.5 {
                         let speed = format_speed(bytes.saturating_sub(rate_bytes) as f64 / elapsed);
@@ -307,11 +312,11 @@ fn download(
                             .trim_end_matches('%')
                             .parse()
                             .unwrap_or(j.progress);
-                        if p[1].trim() != "NA" {
-                            j.speed = p[1].trim().into();
+                        if let Ok(speed) = p[1].trim().parse::<f64>() {
+                            j.speed = format_speed(speed);
                         }
-                        if p[2].trim() != "NA" {
-                            j.bytes = p[2].trim().into();
+                        if let Ok(bytes) = p[2].trim().parse::<u64>() {
+                            j.bytes = format_size(bytes);
                         }
                         j.eta = if p[3].trim() == "NA" {
                             String::new()
@@ -429,11 +434,16 @@ fn download(
         j.path = final_path.to_string_lossy().into_owned();
         j.state = "completed".into();
         j.progress = 100.;
+        if let Ok(metadata) = std::fs::metadata(&final_path) {
+            j.bytes = format_size(metadata.len());
+        }
         j.speed.clear();
         j.eta.clear();
         j.message = message;
         j.pid = 0;
-        let _ = app.emit("job", j.clone());
+        if !j.hidden {
+            let _ = app.emit("job", j.clone());
+        }
         Ok(())
     })();
     // The worker reaches here only after its media processes have exited.
@@ -559,7 +569,9 @@ fn normalize_fast(
         } else {
             j.pid = child.id();
             j.state = "processing".into();
-            let _ = app.emit("job", j.clone());
+            if !j.hidden {
+                let _ = app.emit("job", j.clone());
+            }
             false
         }
     };
@@ -599,6 +611,7 @@ fn enqueue(app: tauri::AppHandle, s: State<Backend>, request: Request) -> Result
         path: String::new(),
         pid: 0,
         request,
+        hidden: false,
     };
     s.jobs.lock().unwrap().insert(id.clone(), job.clone());
     let _ = app.emit("job", job);
@@ -610,7 +623,13 @@ fn enqueue(app: tauri::AppHandle, s: State<Backend>, request: Request) -> Result
 }
 #[tauri::command]
 fn jobs(s: State<Backend>) -> Vec<Job> {
-    s.jobs.lock().unwrap().values().cloned().collect()
+    s.jobs
+        .lock()
+        .unwrap()
+        .values()
+        .filter(|j| !j.hidden)
+        .cloned()
+        .collect()
 }
 #[tauri::command]
 fn control(
@@ -639,12 +658,14 @@ fn control(
         _ => "canceled",
     }
     .into();
-    let _ = app.emit("job", j.clone());
+    if !j.hidden {
+        let _ = app.emit("job", j.clone());
+    }
     Ok(())
 }
 #[tauri::command]
 fn clear_completed(s: State<Backend>) {
-    s.jobs.lock().unwrap().retain(|_, j| j.state != "completed");
+    clear_finished(&mut s.jobs.lock().unwrap());
 }
 #[tauri::command]
 fn retry(app: tauri::AppHandle, s: State<Backend>, id: String) -> Result<String, String> {
