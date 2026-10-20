@@ -8,12 +8,14 @@ import {
   preciseTimestamp,
   parseTimestamp,
   validSection,
+  outFromLength,
   codecFamily,
   type Video,
   type Settings,
   type Job,
 } from "./domain";
 import "./style.css";
+import appIcon from "./assets/app-icon.png";
 const defaults: Settings = {
   destination: "",
   browser: "",
@@ -30,6 +32,8 @@ function App() {
     [playerError, setPlayerError] = useState(""),
     [origin, setOrigin] = useState(""),
     [ready, setReady] = useState(false),
+    [previewActive, setPreviewActive] = useState(false),
+    [lengthValid, setLengthValid] = useState(true),
     [section, setSection] = useState(false),
     [start, setStart] = useState(0),
     [end, setEnd] = useState(0),
@@ -51,6 +55,11 @@ function App() {
       { token: token.current, action, value },
       origin,
     );
+  const stopPreview = () => {
+    send("pause");
+    previewing.current = false;
+    setPreviewActive(false);
+  };
   const act = async (fn: () => Promise<unknown>) => {
     try {
       setError("");
@@ -117,11 +126,21 @@ function App() {
         if (previewing.current === "playing" && value >= end) {
           send("pause");
           previewing.current = false;
+          setPreviewActive(false);
         }
+      }
+      if (
+        type === "state" &&
+        (value === 0 || (value === 2 && previewing.current === "playing"))
+      ) {
+        previewing.current = false;
+        setPreviewActive(false);
       }
       if (type === "ready") setReady(true);
       if (type === "error") {
         setReady(false);
+        previewing.current = false;
+        setPreviewActive(false);
         setPlayerError(
           value === 153
             ? "YouTube rejected the player identity (error 153). Try reopening the app; this WebView may not send the required Referer."
@@ -166,7 +185,7 @@ function App() {
       setBusy(true);
       setPlayerError("");
       setReady(false);
-      previewing.current = false;
+      stopPreview();
       try {
         const clean = normalizeUrl(url);
         setUrl(clean);
@@ -200,8 +219,11 @@ function App() {
     codec === "hevc" ||
     codec === "av1" ||
     codec === "auto";
+  const duration = video?.duration ?? 0;
+  const timelineDuration = duration || 1;
   const selectionValid =
-    !section || (!!video && validSection(start, end, video.duration));
+    !section ||
+    (!!video && lengthValid && validSection(start, end, video.duration));
   const enqueue = () =>
     act(async () => {
       if (!video || !selectionValid)
@@ -249,9 +271,9 @@ function App() {
     <div className="app">
       <header>
         <div className="brand">
-          <span className="app-icon">↓</span>
+          <img className="app-icon" src={appIcon} alt="" />
           <div>
-            <strong>Video Downloader</strong>
+            <strong>TubeCutter</strong>
             <small>Your videos. Your way.</small>
           </div>
         </div>
@@ -287,7 +309,7 @@ function App() {
             />
             <button
               onClick={() =>
-                act(async () => setUrl(await navigator.clipboard.readText()))
+                act(async () => setUrl(await invoke<string>("read_clipboard")))
               }
             >
               Paste
@@ -346,148 +368,166 @@ function App() {
               <input
                 type="checkbox"
                 checked={section}
-                disabled={!video}
-                onChange={(e) => setSection(e.target.checked)}
+                disabled={!video || busy}
+                onChange={(e) => {
+                  setSection(e.target.checked);
+                  stopPreview();
+                }}
               />
               <span>Download only a section of the video</span>
               <span className="key-hint">TRIM</span>
             </label>
-            {section && video && (
-              <div className="trim-details">
-                <div className="timeline-labels">
-                  <span>{timestamp(0)}</span>
-                  <span>
-                    {timestamp(time)} <small>PLAYHEAD</small>
-                  </span>
-                  <span>{timestamp(video.duration)}</span>
-                </div>
+            <fieldset
+              className="trim-details"
+              disabled={!video || busy || !section}
+            >
+              <div className="timeline-labels">
+                <span>{timestamp(0)}</span>
+                <span>
+                  {timestamp(time)} <small>PLAYHEAD</small>
+                </span>
+                <span>{timestamp(duration)}</span>
+              </div>
+              <div
+                className="timeline"
+                ref={timeline}
+                onClick={(e) => {
+                  if (e.target === e.currentTarget) {
+                    const r = e.currentTarget.getBoundingClientRect();
+                    if (!video || busy || !section) return;
+                    if (previewing.current) stopPreview();
+                    setPreviewActive(false);
+                    send("seek", ((e.clientX - r.left) / r.width) * duration);
+                  }
+                }}
+              >
                 <div
-                  className="timeline"
-                  ref={timeline}
-                  onClick={(e) => {
-                    if (e.target === e.currentTarget) {
-                      const r = e.currentTarget.getBoundingClientRect();
-                      previewing.current = false;
-                      send(
-                        "seek",
-                        ((e.clientX - r.left) / r.width) * video.duration,
-                      );
+                  className="selection"
+                  style={{
+                    left: `${(start / timelineDuration) * 100}%`,
+                    width: `${((end - start) / timelineDuration) * 100}%`,
+                  }}
+                />
+                <div
+                  className="playhead"
+                  style={{ left: `${(time / timelineDuration) * 100}%` }}
+                />
+                {(["in", "out"] as const).map((which) => (
+                  <button
+                    key={which}
+                    className={`marker ${which}`}
+                    aria-label={`${which} marker`}
+                    role="slider"
+                    aria-valuemin={0}
+                    aria-valuemax={duration}
+                    aria-valuenow={which === "in" ? start : end}
+                    style={{
+                      left: `${((which === "in" ? start : end) / timelineDuration) * 100}%`,
+                    }}
+                    onPointerDown={(e) => drag(e, which)}
+                    onKeyDown={(e) => {
+                      if (["ArrowLeft", "ArrowRight"].includes(e.key)) {
+                        e.preventDefault();
+                        const delta =
+                          (e.key === "ArrowRight" ? 1 : -1) *
+                          (e.shiftKey ? 1 : 0.1);
+                        if (which === "in")
+                          setStart(
+                            Math.max(0, Math.min(end - 0.01, start + delta)),
+                          );
+                        else
+                          setEnd(
+                            Math.min(
+                              duration,
+                              Math.max(start + 0.01, end + delta),
+                            ),
+                          );
+                      }
+                    }}
+                  >
+                    Ⅱ
+                  </button>
+                ))}
+              </div>
+              <div className="trim-controls">
+                <div className="point">
+                  <button disabled={!ready} onClick={setIn}>
+                    Set In <kbd>I</kbd>
+                  </button>
+                  <TimeInput
+                    value={start}
+                    onChange={(n) => {
+                      if (!validSection(n, end, duration))
+                        throw Error("In must precede Out.");
+                      setStart(n);
+                    }}
+                  />
+                </div>
+                <div className="point">
+                  <button disabled={!ready} onClick={setOut}>
+                    Set Out <kbd>O</kbd>
+                  </button>
+                  <TimeInput
+                    value={end}
+                    onChange={(n) => {
+                      if (!validSection(start, n, duration))
+                        throw Error("Out must follow In and fit the video.");
+                      setEnd(n);
+                    }}
+                  />
+                </div>
+                <LengthInput
+                  value={Math.round((end - start) * 1000) / 1000}
+                  onValidity={setLengthValid}
+                  onChange={(length) =>
+                    setEnd(outFromLength(start, length, duration))
+                  }
+                />
+                <button
+                  disabled={!ready || (!previewActive && !selectionValid)}
+                  onClick={() => {
+                    if (previewing.current) {
+                      stopPreview();
+                      return;
                     }
+                    send("seek", start);
+                    previewing.current = "seeking";
+                    setPreviewActive(true);
+                    send("play");
                   }}
                 >
-                  <div
-                    className="selection"
-                    style={{
-                      left: `${(start / video.duration) * 100}%`,
-                      width: `${((end - start) / video.duration) * 100}%`,
-                    }}
-                  />
-                  <div
-                    className="playhead"
-                    style={{ left: `${(time / video.duration) * 100}%` }}
-                  />
-                  {(["in", "out"] as const).map((which) => (
-                    <button
-                      key={which}
-                      className={`marker ${which}`}
-                      aria-label={`${which} marker`}
-                      role="slider"
-                      aria-valuemin={0}
-                      aria-valuemax={video.duration}
-                      aria-valuenow={which === "in" ? start : end}
-                      style={{
-                        left: `${((which === "in" ? start : end) / video.duration) * 100}%`,
-                      }}
-                      onPointerDown={(e) => drag(e, which)}
-                      onKeyDown={(e) => {
-                        if (["ArrowLeft", "ArrowRight"].includes(e.key)) {
-                          e.preventDefault();
-                          const delta =
-                            (e.key === "ArrowRight" ? 1 : -1) *
-                            (e.shiftKey ? 1 : 0.1);
-                          if (which === "in")
-                            setStart(
-                              Math.max(0, Math.min(end - 0.01, start + delta)),
-                            );
-                          else
-                            setEnd(
-                              Math.min(
-                                video.duration,
-                                Math.max(start + 0.01, end + delta),
-                              ),
-                            );
-                        }
-                      }}
-                    >
-                      Ⅱ
-                    </button>
-                  ))}
-                </div>
-                <div className="trim-controls">
-                  <div className="point">
-                    <button disabled={!ready} onClick={setIn}>
-                      Set In <kbd>I</kbd>
-                    </button>
-                    <TimeInput
-                      value={start}
-                      onChange={(n) => {
-                        if (!validSection(n, end, video.duration))
-                          throw Error("In must precede Out.");
-                        setStart(n);
-                      }}
-                    />
-                  </div>
-                  <div className="point">
-                    <button disabled={!ready} onClick={setOut}>
-                      Set Out <kbd>O</kbd>
-                    </button>
-                    <TimeInput
-                      value={end}
-                      onChange={(n) => {
-                        if (!validSection(start, n, video.duration))
-                          throw Error("Out must follow In and fit the video.");
-                        setEnd(n);
-                      }}
-                    />
-                  </div>
-                  <div className="selection-duration">
-                    <small>SELECTION</small>
-                    <strong>{(end - start).toFixed(2)}s</strong>
-                  </div>
-                  <button
-                    disabled={!ready}
-                    onClick={() => {
-                      send("seek", start);
-                      previewing.current = "seeking";
-                      send("play");
-                    }}
-                  >
-                    ▶ Preview Selection
-                  </button>
-                  <button
-                    onClick={() => {
-                      setStart(0);
-                      setEnd(video.duration);
-                      previewing.current = false;
-                    }}
-                  >
-                    Reset
-                  </button>
-                </div>
-                <label className="check">
-                  <input
-                    type="checkbox"
-                    checked={precise}
-                    onChange={(e) => setPrecise(e.target.checked)}
-                  />
-                  Precise Cut{" "}
-                  <small>
-                    {precise
-                      ? "Re-encodes for accurate boundaries. Automatic uses H.264 / AAC."
-                      : "Fast Cut preserves streams; boundaries may align to keyframes."}
-                  </small>
-                </label>
+                  {previewActive ? "■ Stop" : "▶ Preview selection"}
+                </button>
+                <button
+                  onClick={() => {
+                    setStart(0);
+                    setEnd(duration);
+                    if (!video || busy || !section) return;
+                    if (previewing.current) stopPreview();
+                    setPreviewActive(false);
+                  }}
+                >
+                  Reset
+                </button>
               </div>
+              <label className="check">
+                <input
+                  type="checkbox"
+                  checked={precise}
+                  onChange={(e) => setPrecise(e.target.checked)}
+                />
+                Precise Cut{" "}
+                <small>
+                  {precise
+                    ? "Re-encodes for accurate boundaries. Automatic uses H.264 / AAC."
+                    : "Fast Cut preserves streams; boundaries may align to keyframes."}
+                </small>
+              </label>
+            </fieldset>
+            {!video && (
+              <small className="trim-hint">
+                Process a video link to enable trimming.
+              </small>
             )}
           </div>
         </section>
@@ -583,7 +623,20 @@ function App() {
             Unavailable combinations fail explicitly.
           </p>
           <div className="destination">
-            <span className="folder-icon">▱</span>
+            <svg
+              className="folder-icon"
+              width="30"
+              height="30"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.7"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M3 7V5a1 1 0 0 1 1-1h5l2 3h9a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7Z" />
+              <path d="M3 9h18" />
+            </svg>
             <div>
               <small>SAVE TO</small>
               <p>{settings.destination || "Choose a download folder"}</p>
@@ -706,7 +759,7 @@ function App() {
           )}
         </section>
         <footer>
-          <span>VIDEO DOWNLOADER</span>
+          <span>TUBECUTTER</span>
           <span>Made for your personal library.</span>
         </footer>
       </main>
@@ -792,6 +845,49 @@ function Field({
     <label className="field">
       <span>{label}</span>
       {children}
+    </label>
+  );
+}
+function LengthInput({
+  value,
+  onChange,
+  onValidity,
+}: {
+  value: number;
+  onChange: (n: number) => void;
+  onValidity: (valid: boolean) => void;
+}) {
+  const [text, setText] = useState(String(value));
+  const [invalid, setInvalid] = useState("");
+  useEffect(() => {
+    setText(String(value));
+    setInvalid("");
+    onValidity(true);
+  }, [value, onValidity]);
+  return (
+    <label className="time-input length-input">
+      <span>Length (seconds)</span>
+      <input
+        aria-label="Length in seconds"
+        type="number"
+        min="0.001"
+        step="0.001"
+        value={text}
+        aria-invalid={!!invalid}
+        onChange={(e) => {
+          setText(e.target.value);
+          try {
+            if (!e.target.value.trim()) throw Error("Enter a length.");
+            onChange(Number(e.target.value));
+            setInvalid("");
+            onValidity(true);
+          } catch (e) {
+            setInvalid(String(e));
+            onValidity(false);
+          }
+        }}
+      />
+      {invalid && <small role="alert">{invalid}</small>}
     </label>
   );
 }

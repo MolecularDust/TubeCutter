@@ -8,7 +8,7 @@
 | -------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------ |
 | Frontend type check / production build                         | PASS   | `npm run build`                                                                                                    |
 | Frontend lint                                                  | PASS   | `npm run lint`                                                                                                     |
-| URL parsing, timestamp rules, selection arithmetic             | PASS   | 7 Vitest tests                                                                                                     |
+| URL parsing, timestamp rules, selection arithmetic             | PASS   | 8 Vitest tests                                                                                                     |
 | Native validation, diagnostic redaction, process-group control | PASS   | 8 Rust tests                                                                                                       |
 | Rust formatting / strict lint                                  | PASS   | `cargo fmt --check`, `cargo clippy -- -D warnings`                                                                 |
 | Production dependency audit                                    | PASS   | Zero vulnerabilities at the initial completed build                                                                |
@@ -48,8 +48,24 @@ The old yt-dlp test video `BaW_jenozKc` was unavailable, so testing switched to 
 
 ## Remaining limitations / unverified behavior
 
-Browser-cookie import/extraction, Keychain/Full Disk Access prompts, subtitle timing in trimmed outputs, every codec/container combination, clipboard Paste, pointer dragging, Finder reveal, and forced error-153 scenarios were not fully exercised. Actual successful embedded playback without error 153 was verified in WKWebView. No credentials or system-wide settings were accessed or changed.
+Browser-cookie import/extraction, Keychain/Full Disk Access prompts, subtitle timing in trimmed outputs, every codec/container combination, pointer dragging, Finder reveal, and forced error-153 scenarios were not fully exercised. Actual successful embedded playback without error 153 was verified in WKWebView. No credentials or system-wide settings were accessed or changed.
 
 Fast Cut may include substantial keyframe pre-roll; use Precise Cut for exact boundaries. Partial delivery may transfer more data than the selected interval. Audio-only Fast Cut rejects ambiguous timestamps. There is no automatic whole-source or lower-quality fallback. Queue history is session-local, and long Unix process pauses may lose server connections.
 
 Other OS/CPU builds, Developer ID signing, notarization, and complete corresponding-source/third-party-notice assembly for public GPL binary redistribution remain release work.
+
+## TubeCutter update verification
+
+The release app and DMG are named TubeCutter. The supplied `Glossy Red Play Button Emblem.png` is preserved in `src/assets/app-icon.png`, used in the header, and converted into the bundled macOS icon. The bundle identifier remains unchanged to preserve preferences.
+
+The rebuilt signed release was checked in native WKWebView:
+
+- The entire trim panel is present before analysis, with disabled controls. Analysis enables the trim checkbox; selecting it enables editing.
+- A known public video URL was copied using Command-C, cleared from the field, and restored by the app's native Paste button.
+- In=10s and Length=5s produced Out=15s. Editing Out to18s changed Length to8s. Length=60s produced Out=70s.
+- Preview selection displayed Stop during actual embedded playback. Clicking Stop restored Preview selection and the playhead stayed paused at18s. A separate10–18s preview stopped automatically at Out and restored the button.
+- Save shows a proper folder outline in its original blue color.
+
+Eight frontend tests and eight native tests pass, along with production build, frontend lint, Rust formatting, and strict Clippy. Vitest discovery is restricted to source tests so packaging's Applications symlink cannot collect unrelated installed-app tests. Packaging verified the app/staged signatures, all five hardened executables, the approved yt-dlp-only entitlement, signed tool execution, and DMG integrity. Existing download-engine integration results above were not rerun for these UI changes.
+
+Artifacts: `src-tauri/target/release/bundle/macos/TubeCutter.app` and `src-tauri/target/release/bundle/dmg/TubeCutter_0.1.0_aarch64.dmg`. This remains an ad-hoc signed local evaluation build without notarization.

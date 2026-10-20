@@ -87,3 +87,18 @@ export function preciseTimestamp(value: number): string {
     (ms % 1000 ? `.${String(ms % 1000).padStart(3, "0")}` : "")
   );
 }
+
+export function outFromLength(
+  start: number,
+  length: number,
+  duration: number,
+): number {
+  const out = Math.round((start + length) * 1000) / 1000;
+  if (
+    !Number.isFinite(length) ||
+    length <= 0 ||
+    !validSection(start, out, duration)
+  )
+    throw Error("Length must be positive and fit within the video.");
+  return out;
+}

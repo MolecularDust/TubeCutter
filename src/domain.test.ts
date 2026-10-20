@@ -5,6 +5,7 @@ import {
   timestamp,
   preciseTimestamp,
   validSection,
+  outFromLength,
   codecFamily,
 } from "./domain";
 describe("YouTube URL validation", () => {
@@ -62,4 +63,12 @@ it("rounds milliseconds across second boundaries", () => {
   expect(preciseTimestamp(0.9996)).toBe("00:00:01");
   expect(preciseTimestamp(59.9996)).toBe("00:01:00");
   expect(preciseTimestamp(1.125)).toBe("00:00:01.125");
+});
+
+it("links fractional Length to Out and rejects cuts outside the video", () => {
+  expect(outFromLength(10.125, 2.25, 20)).toBe(12.375);
+  expect(outFromLength(10, 10, 20)).toBe(20);
+  expect(outFromLength(10.125, 12.375 - 10.125, 20)).toBe(12.375);
+  for (const length of [0, -1, NaN, Infinity, 11])
+    expect(() => outFromLength(10, length, 20)).toThrow();
 });

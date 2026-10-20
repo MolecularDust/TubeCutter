@@ -1,4 +1,4 @@
-# Video Downloader
+# TubeCutter
 
 A native Tauri 2 + React + Rust desktop application for authorized YouTube downloads, embedded preview, section selection, and a managed download queue. macOS Apple Silicon is the current build target. See [test results](docs/TEST_RESULTS.md) for what has actually been verified.
 
@@ -23,7 +23,7 @@ On a fresh checkout, install Rust using https://rustup.rs or install it locally 
 npm run package:dev
 ```
 
-This produces a local development `.app` at `src-tauri/target/debug/bundle/macos/Video Downloader.app`. It uses the development signing posture, not the hardened distribution configuration. It is suitable for local evaluation, not public distribution.
+This produces a local development `.app` at `src-tauri/target/debug/bundle/macos/TubeCutter.app`. It uses the development signing posture, not the hardened distribution configuration. It is suitable for local evaluation, not public distribution.
 
 ## Release build
 
@@ -40,8 +40,8 @@ Binaries are excluded from Git. The installed versions/hashes are recorded in `d
 1. Choose a destination folder with the native picker.
 2. Paste a YouTube watch, youtu.be or Shorts link and Analyze.
 3. Use the full-width YouTube player. Its native controls handle playback and volume.
-4. Enable “Download only a section of the video” to reveal the timeline. Drag In/Out, edit HH:MM:SS(.mmm), or use Set In/Set Out. I/O work outside fields; Space toggles playback. Arrow keys move a focused marker by 0.1s, Shift+Arrow by 1s.
-5. Preview Selection plays from In and pauses at Out. Choose Fast Cut or Precise Cut.
+4. Enable “Download only a section of the video” to enable the always-visible timeline. Drag In/Out, edit HH:MM:SS(.mmm), or use Set In/Set Out. I/O work outside fields; Space toggles playback. Arrow keys move a focused marker by 0.1s, Shift+Arrow by 1s.
+5. Edit Length (seconds) to adjust Out; changing In or Out updates Length. Preview selection plays from In and pauses at Out; the button becomes Stop during preview. Choose Fast Cut or Precise Cut.
 6. Select a container, actual source resolution, codec, audio, subtitles and mode; add to the queue.
 7. Pause/resume or cancel active downloads. Retry failures and reveal completed files in Finder.
 

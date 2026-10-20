@@ -26,9 +26,7 @@ run(process.execPath, [
   "--config",
   "src-tauri/tauri.bundle.conf.json",
 ]);
-const app = resolve(
-  "src-tauri/target/release/bundle/macos/Video Downloader.app",
-);
+const app = resolve("src-tauri/target/release/bundle/macos/TubeCutter.app");
 const binaries = join(app, "Contents/MacOS");
 // Approved by the user on 2026-10-20. Never apply this entitlement to the main app.
 run("codesign", [
@@ -90,7 +88,7 @@ mkdirSync(".tools", { recursive: true });
 const temporary = mkdtempSync(resolve(".tools/package-"));
 const staging = join(temporary, "image");
 mkdirSync(staging);
-cpSync(app, join(staging, "Video Downloader.app"), {
+cpSync(app, join(staging, "TubeCutter.app"), {
   recursive: true,
   verbatimSymlinks: true,
 });
@@ -98,14 +96,14 @@ run("codesign", [
   "--verify",
   "--deep",
   "--strict",
-  join(staging, "Video Downloader.app"),
+  join(staging, "TubeCutter.app"),
 ]);
 symlinkSync("/Applications", join(staging, "Applications"));
-const image = join(temporary, "Video Downloader_0.1.0_aarch64.dmg");
+const image = join(temporary, "TubeCutter_0.1.0_aarch64.dmg");
 run("hdiutil", [
   "create",
   "-volname",
-  "Video Downloader",
+  "TubeCutter",
   "-srcfolder",
   staging,
   "-format",
@@ -115,7 +113,7 @@ run("hdiutil", [
 run("hdiutil", ["verify", image]);
 const destination = resolve("src-tauri/target/release/bundle/dmg");
 mkdirSync(destination, { recursive: true });
-const finalImage = join(destination, "Video Downloader_0.1.0_aarch64.dmg");
+const finalImage = join(destination, "TubeCutter_0.1.0_aarch64.dmg");
 renameSync(image, finalImage);
 const hashes = {
   target: "aarch64-apple-darwin",
@@ -128,7 +126,7 @@ for (const name of ["video-downloader", "yt-dlp", "ffmpeg", "ffprobe", "deno"])
   hashes.files[name] = createHash("sha256")
     .update(readFileSync(join(binaries, name)))
     .digest("hex");
-hashes.files["Video Downloader_0.1.0_aarch64.dmg"] = createHash("sha256")
+hashes.files["TubeCutter_0.1.0_aarch64.dmg"] = createHash("sha256")
   .update(readFileSync(finalImage))
   .digest("hex");
 writeFileSync(

@@ -635,8 +635,20 @@ fn reveal(s: State<Backend>, id: String) -> Result<(), String> {
     return Err("Reveal is not implemented for this platform".into());
     Ok(())
 }
+#[tauri::command]
+fn read_clipboard(app: tauri::AppHandle) -> Result<String, String> {
+    use tauri_plugin_clipboard_manager::ClipboardExt;
+    let text = app.clipboard().read_text().map_err(|_| {
+        "Could not read the clipboard. Copy a video link and try again.".to_string()
+    })?;
+    if text.trim().is_empty() {
+        return Err("The clipboard contains no text. Copy a video link first.".into());
+    }
+    Ok(text.trim().to_string())
+}
 pub fn run() {
     let app = tauri::Builder::default()
+        .plugin(tauri_plugin_clipboard_manager::init())
         .setup(|app| {
             let settings = settings_path(app.handle())
                 .ok()
@@ -669,6 +681,7 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            read_clipboard,
             get_settings,
             save_settings,
             pick_folder,
@@ -683,7 +696,7 @@ pub fn run() {
             reveal
         ])
         .build(tauri::generate_context!())
-        .expect("Unable to start Video Downloader");
+        .expect("Unable to start TubeCutter");
     app.run(|app, event| {
         if let tauri::RunEvent::Exit = event {
             let s = app.state::<Backend>();

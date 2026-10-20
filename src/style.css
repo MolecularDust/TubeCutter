@@ -686,3 +686,33 @@ footer > span:first-child {
   --shadow: none;
   color-scheme: dark;
 }
+
+fieldset.trim-details {
+  border: 0;
+  padding: 0;
+  min-width: 0;
+}
+fieldset.trim-details:disabled {
+  opacity: 0.42;
+  pointer-events: none;
+}
+.trim-hint {
+  display: block;
+  color: var(--muted);
+  margin-top: 12px;
+}
+.app-icon {
+  object-fit: cover;
+}
+.trim-controls {
+  flex-wrap: wrap;
+}
+.length-input {
+  margin-right: auto;
+}
+.length-input > span {
+  display: block;
+  font-size: 10px;
+  margin-bottom: 5px;
+  color: var(--muted);
+}
