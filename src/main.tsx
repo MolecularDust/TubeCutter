@@ -303,7 +303,7 @@ function App() {
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") analyze();
+                if (e.key === "Enter" && !busy && url.trim()) analyze();
               }}
               placeholder="Paste a YouTube, Shorts, or youtu.be link"
             />
@@ -315,11 +315,13 @@ function App() {
               Paste
             </button>
             <button
-              className="primary"
+              className="primary analyze-button"
+              aria-busy={busy}
               disabled={busy || !url}
               onClick={analyze}
             >
-              {busy ? "Analyzing…" : "Analyze →"}
+              {busy && <span className="analyze-spinner" aria-hidden="true" />}
+              <span role="status">{busy ? "Analyzing…" : "Analyze →"}</span>
             </button>
           </div>
         </section>

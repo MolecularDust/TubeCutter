@@ -69,3 +69,9 @@ The rebuilt signed release was checked in native WKWebView:
 Eight frontend tests and eight native tests pass, along with production build, frontend lint, Rust formatting, and strict Clippy. Vitest discovery is restricted to source tests so packaging's Applications symlink cannot collect unrelated installed-app tests. Packaging verified the app/staged signatures, all five hardened executables, the approved yt-dlp-only entitlement, signed tool execution, and DMG integrity. Existing download-engine integration results above were not rerun for these UI changes.
 
 Artifacts: `src-tauri/target/release/bundle/macos/TubeCutter.app` and `src-tauri/target/release/bundle/dmg/TubeCutter_0.1.0_aarch64.dmg`. This remains an ad-hoc signed local evaluation build without notarization.
+
+## Analysis spinner and trim layout follow-up
+
+Analyze now shows a rotating spinner throughout the existing busy interval, including failure cleanup. Repeated Enter submissions are ignored while busy. The trim controls use a shared grid: Set In, Set Out, and Length headers occupy the first row; their three inputs, Preview selection/Stop, and Reset occupy the same 34px second row. Validation messages occupy a separate row.
+
+Rendered browser-preview geometry confirmed that all three inputs and both action buttons share an identical Y coordinate and 34px height; headers remain above the inputs. The active native app session was preserved rather than restarted for this visual-only update. Frontend build, lint, eight source tests, hardened signing checks, signed sidecar checks, and rebuilt DMG integrity all pass. The spinner's busy-state animation was inspected in source; a fresh native analysis was not run for this follow-up.
