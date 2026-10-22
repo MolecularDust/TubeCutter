@@ -160,3 +160,26 @@ export function acceptPlayerTime(
     now >= pending.expires
   );
 }
+
+export function paddedSection(
+  start: number,
+  end: number,
+  padding: number,
+  duration: number,
+): [number, number] {
+  const extra = Math.max(0, Math.min(99, Math.trunc(padding)));
+  return [Math.max(0, start - extra), Math.min(duration, end + extra)];
+}
+
+export function stepPaddedLength(
+  start: number,
+  end: number,
+  padding: number,
+  duration: number,
+  delta: number,
+): number {
+  const [, paddedEnd] = paddedSection(start, end, padding, duration);
+  if (delta > 0 && paddedEnd >= duration) return end;
+  const target = Math.min(duration, paddedEnd + delta);
+  return Math.min(duration, Math.max(start + 0.01, target - padding));
+}

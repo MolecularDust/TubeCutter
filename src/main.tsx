@@ -8,11 +8,12 @@ import {
   preciseTimestamp,
   parseTimestamp,
   validSection,
-  outFromLength,
   codecFamily,
   updateQueue,
   clearQueueRows,
   isTrimmed,
+  paddedSection,
+  stepPaddedLength,
   timelineTime,
   acceptPlayerTime,
   type SeekTarget,
@@ -42,7 +43,11 @@ function App() {
     [origin, setOrigin] = useState(""),
     [ready, setReady] = useState(false),
     [previewActive, setPreviewActive] = useState(false),
-    [lengthValid, setLengthValid] = useState(true),
+    [inValid, setInValid] = useState(true),
+    [outValid, setOutValid] = useState(true),
+    [resetVersion, setResetVersion] = useState(0),
+    [padding, setPadding] = useState(2),
+    [paddingEditing, setPaddingEditing] = useState(false),
     [start, setStart] = useState(0),
     [end, setEnd] = useState(0),
     [time, setTime] = useState(0),
@@ -63,6 +68,9 @@ function App() {
     previewing = useRef<false | "seeking" | "playing">(false),
     token = useRef(crypto.randomUUID()),
     timeline = useRef<HTMLDivElement>(null);
+  const duration = video?.duration ?? 0;
+  const timelineDuration = duration || 1;
+  const [clipStart, clipEnd] = paddedSection(start, end, padding, duration);
   const send = (action: string, value?: number) =>
     iframe.current?.contentWindow?.postMessage(
       { token: token.current, action, value },
@@ -138,11 +146,11 @@ function App() {
         setTime(value);
         if (
           previewing.current === "seeking" &&
-          value >= start - 0.25 &&
-          value < end
+          value >= clipStart - 0.25 &&
+          value < clipEnd
         )
           previewing.current = "playing";
-        if (previewing.current === "playing" && value >= end) {
+        if (previewing.current === "playing" && value >= clipEnd) {
           send("pause");
           previewing.current = false;
           setPreviewActive(false);
@@ -171,7 +179,7 @@ function App() {
     };
     window.addEventListener("message", handler);
     return () => window.removeEventListener("message", handler);
-  }, [origin, start, end]);
+  }, [origin, clipStart, clipEnd]);
   const setIn = () => setStart(Math.max(0, Math.min(time, end - 0.01)));
   const setOut = () =>
     setEnd(Math.min(video?.duration ?? end, Math.max(time, start + 0.01)));
@@ -219,6 +227,11 @@ function App() {
         setFileNameEdited(false);
         setStart(0);
         setEnd(v.duration);
+        setPadding(2);
+        setPaddingEditing(false);
+        setInValid(true);
+        setOutValid(true);
+        setResetVersion((n) => n + 1);
         setTime(0);
         setResolution("");
         setCodec("auto");
@@ -243,11 +256,9 @@ function App() {
     codec === "hevc" ||
     codec === "av1" ||
     codec === "auto";
-  const duration = video?.duration ?? 0;
-  const timelineDuration = duration || 1;
-  const section = !!video && isTrimmed(start, end, video.duration);
+  const section = !!video && isTrimmed(clipStart, clipEnd, video.duration);
   const selectionValid =
-    !!video && lengthValid && validSection(start, end, video.duration);
+    !!video && inValid && outValid && validSection(start, end, video.duration);
   const enqueue = () =>
     act(async () => {
       if (!video || !selectionValid)
@@ -264,7 +275,7 @@ function App() {
           audio,
           mode,
           subtitle,
-          section: section ? [start, end] : null,
+          section: section ? [clipStart, clipEnd] : null,
           precise: section && precise,
           duration: video.duration,
         },
@@ -445,8 +456,8 @@ function App() {
                 <div
                   className="selection"
                   style={{
-                    left: `${(start / timelineDuration) * 100}%`,
-                    width: `${((end - start) / timelineDuration) * 100}%`,
+                    left: `${(clipStart / timelineDuration) * 100}%`,
+                    width: `${((clipEnd - clipStart) / timelineDuration) * 100}%`,
                   }}
                 />
                 <div
@@ -528,6 +539,9 @@ function App() {
                     Set In <kbd>I</kbd>
                   </button>
                   <TimeInput
+                    key={`in-${resetVersion}`}
+                    label="In"
+                    onValidity={setInValid}
                     value={start}
                     onChange={(n) => {
                       if (!validSection(n, end, duration))
@@ -541,6 +555,9 @@ function App() {
                     Set Out <kbd>O</kbd>
                   </button>
                   <TimeInput
+                    key={`out-${resetVersion}`}
+                    label="Out"
+                    onValidity={setOutValid}
                     value={end}
                     onChange={(n) => {
                       if (!validSection(start, n, duration))
@@ -549,14 +566,74 @@ function App() {
                     }}
                   />
                 </div>
-                <LengthInput
-                  value={Math.round((end - start) * 1000) / 1000}
-                  onValidity={setLengthValid}
-                  onChange={(length) =>
-                    setEnd(outFromLength(start, length, duration))
-                  }
-                />
+                <div className="time-input length-input padding-input">
+                  <label className="length-label" htmlFor="padding">
+                    Padding
+                    <br />
+                    (seconds)
+                  </label>
+                  <div className="number-stepper">
+                    <input
+                      id="padding"
+                      aria-label="Padding in seconds"
+                      inputMode="numeric"
+                      maxLength={2}
+                      value={
+                        paddingEditing
+                          ? String(padding)
+                          : String(padding).padStart(2, "0")
+                      }
+                      onFocus={(e) => {
+                        setPaddingEditing(true);
+                        e.target.select();
+                      }}
+                      onBlur={() => setPaddingEditing(false)}
+                      onChange={(e) => {
+                        if (/^\d{0,2}$/.test(e.target.value))
+                          setPadding(Number(e.target.value));
+                      }}
+                    />
+                    <StepperButtons
+                      label="Padding"
+                      onStep={(delta) =>
+                        setPadding(Math.max(0, Math.min(99, padding + delta)))
+                      }
+                    />
+                  </div>
+                </div>
+                <div className="time-input length-input calculated-length">
+                  <span className="length-label">
+                    Length
+                    <br />
+                    (seconds)
+                  </span>
+                  <div className="number-stepper">
+                    <input
+                      aria-label="Length in seconds"
+                      readOnly
+                      value={Math.round((clipEnd - clipStart) * 1000) / 1000}
+                    />
+                    <StepperButtons
+                      label="Length"
+                      onStep={(delta) => {
+                        setEnd(
+                          stepPaddedLength(
+                            start,
+                            end,
+                            padding,
+                            duration,
+                            delta,
+                          ),
+                        );
+                        setResetVersion((n) => n + 1);
+                        setInValid(true);
+                        setOutValid(true);
+                      }}
+                    />
+                  </div>
+                </div>
                 <button
+                  className="preview-button"
                   disabled={!ready || (!previewActive && !selectionValid)}
                   onClick={() => {
                     if (previewing.current) {
@@ -564,11 +641,11 @@ function App() {
                       return;
                     }
                     seekTarget.current = {
-                      position: start,
+                      position: clipStart,
                       expires: performance.now() + 3000,
                     };
-                    setTime(start);
-                    send("seek", start);
+                    setTime(clipStart);
+                    send("seek", clipStart);
                     previewing.current = "seeking";
                     setPreviewActive(true);
                     send("play");
@@ -577,9 +654,15 @@ function App() {
                   {previewActive ? "■ Stop" : "▶ Preview selection"}
                 </button>
                 <button
+                  className="reset-button"
+                  type="button"
                   onClick={() => {
                     setStart(0);
                     setEnd(duration);
+                    setPadding(2);
+                    setInValid(true);
+                    setOutValid(true);
+                    setResetVersion((n) => n + 1);
                     if (!video || busy) return;
                     if (previewing.current) stopPreview();
                     setPreviewActive(false);
@@ -588,6 +671,13 @@ function App() {
                   Reset
                 </button>
               </div>
+              {video && padding > 0 && (
+                <small className="padding-summary">
+                  With padding: {preciseTimestamp(clipStart)} –{" "}
+                  {preciseTimestamp(clipEnd)}. Padding stops at the video
+                  boundaries.
+                </small>
+              )}
               <label
                 className={`download-filename${fileNameEditing || fileNameEdited ? " is-editing" : ""}`}
               >
@@ -967,83 +1057,92 @@ function Field({
     </label>
   );
 }
-function LengthInput({
-  value,
-  onChange,
-  onValidity,
+function StepperButtons({
+  label,
+  onStep,
 }: {
-  value: number;
-  onChange: (n: number) => void;
-  onValidity: (valid: boolean) => void;
+  label: string;
+  onStep: (delta: number) => void;
 }) {
-  const [text, setText] = useState(String(value));
-  const [invalid, setInvalid] = useState("");
-  useEffect(() => {
-    setText(String(value));
-    setInvalid("");
-    onValidity(true);
-  }, [value, onValidity]);
   return (
-    <label className="time-input length-input">
-      <span>Length (seconds)</span>
-      <input
-        aria-label="Length in seconds"
-        type="number"
-        min="0.001"
-        step="0.001"
-        value={text}
-        aria-invalid={!!invalid}
-        onChange={(e) => {
-          setText(e.target.value);
-          try {
-            if (!e.target.value.trim()) throw Error("Enter a length.");
-            onChange(Number(e.target.value));
-            setInvalid("");
-            onValidity(true);
-          } catch (e) {
-            setInvalid(String(e));
-            onValidity(false);
-          }
-        }}
-      />
-      {invalid && <small role="alert">{invalid}</small>}
-    </label>
+    <span className="stepper-buttons">
+      <button
+        type="button"
+        aria-label={`Increase ${label} by one second`}
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={() => onStep(1)}
+      >
+        ▴
+      </button>
+      <button
+        type="button"
+        aria-label={`Decrease ${label} by one second`}
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={() => onStep(-1)}
+      >
+        ▾
+      </button>
+    </span>
   );
 }
 function TimeInput({
   value,
   onChange,
+  onValidity,
+  label,
 }: {
   value: number;
   onChange: (n: number) => void;
+  onValidity: (valid: boolean) => void;
+  label: string;
 }) {
-  const [text, setText] = useState(timestamp(value)),
+  const [text, setText] = useState(preciseTimestamp(value)),
     [invalid, setInvalid] = useState("");
   useEffect(() => {
     setText(preciseTimestamp(value));
     setInvalid("");
-  }, [value]);
+    onValidity(true);
+  }, [value, onValidity]);
+  const commit = () => {
+    try {
+      onChange(parseTimestamp(text));
+      setInvalid("");
+      onValidity(true);
+    } catch (e) {
+      setInvalid(String(e));
+      onValidity(false);
+    }
+  };
+  const step = (delta: number) => {
+    try {
+      onChange(Math.round((value + delta) * 1000) / 1000);
+      setInvalid("");
+      onValidity(true);
+    } catch (e) {
+      setInvalid(String(e));
+      onValidity(false);
+    }
+  };
   return (
-    <label className="time-input">
-      <input
-        aria-label="Timestamp"
-        value={text}
-        aria-invalid={!!invalid}
-        onChange={(e) => setText(e.target.value)}
-        onBlur={() => {
-          try {
-            onChange(parseTimestamp(text));
-            setInvalid("");
-          } catch (e) {
-            setInvalid(String(e));
-          }
-        }}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") e.currentTarget.blur();
-        }}
-      />
+    <div className="time-input">
+      <div className="number-stepper">
+        <input
+          aria-label={`${label} timestamp`}
+          value={text}
+          aria-invalid={!!invalid}
+          onChange={(e) => {
+            setText(e.target.value);
+            onValidity(false);
+          }}
+          onBlur={commit}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") e.currentTarget.blur();
+          }}
+        />
+        <StepperButtons label={label} onStep={step} />
+      </div>
       {invalid && <small role="alert">{invalid}</small>}
-    </label>
+    </div>
   );
 }
 createRoot(document.getElementById("root")!).render(

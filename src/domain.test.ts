@@ -10,6 +10,8 @@ import {
   updateQueue,
   clearQueueRows,
   isTrimmed,
+  paddedSection,
+  stepPaddedLength,
   timelineTime,
   acceptPlayerTime,
   type Job,
@@ -148,5 +150,33 @@ describe("timeline scrubbing", () => {
     expect(
       acceptPlayerTime(10, { position: 150, expires: 3000 }, false, 3100),
     ).toBe(true);
+  });
+});
+
+describe("padding", () => {
+  it("extends both ends without accumulating", () => {
+    expect(paddedSection(250.44, 253.44, 2, 635)).toEqual([248.44, 255.44]);
+    expect(paddedSection(10, 20, 3, 100)).toEqual([7, 23]);
+    expect(paddedSection(10, 20, 0, 100)).toEqual([10, 20]);
+  });
+  it("clamps independently at the video boundaries", () => {
+    expect(paddedSection(0, 20, 5, 100)).toEqual([0, 25]);
+    expect(paddedSection(10, 100, 5, 100)).toEqual([5, 100]);
+    expect(paddedSection(2, 98, 99, 100)).toEqual([0, 100]);
+    const full = paddedSection(0, 100, 2, 100);
+    expect(full).toEqual([0, 100]);
+    expect(isTrimmed(...full, 100)).toBe(false);
+  });
+});
+
+describe("length stepper with padding", () => {
+  it("changes the padded length by a second", () => {
+    expect(stepPaddedLength(10, 20, 2, 100, 1)).toBe(21);
+    expect(stepPaddedLength(10, 20, 2, 100, -1)).toBe(19);
+  });
+  it("handles clipped end padding and preserves valid bounds", () => {
+    expect(stepPaddedLength(10, 100, 2, 100, -1)).toBe(97);
+    expect(stepPaddedLength(10, 98, 2, 100, 1)).toBe(98);
+    expect(stepPaddedLength(10, 10.1, 2, 100, -1)).toBe(10.01);
   });
 });
