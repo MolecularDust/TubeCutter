@@ -8,3 +8,13 @@ src-tauri/binaries/
 
 *.tsbuildinfo
 src-tauri/gen/
+
+# Machine-local configuration and credentials
+.env
+.env.*
+!.env.example
+*.pem.key
+*.p12
+*.pfx
+Thumbs.db
+Desktop.ini

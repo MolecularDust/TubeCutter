@@ -6,6 +6,8 @@ A native Tauri 2 + React + Rust desktop application for authorized YouTube downl
 
 ## Run
 
+For cloning on Mac or Windows, moving changes between computers, and the remaining Windows release work, see [working across computers](docs/CROSS_PLATFORM.md).
+
 Requires Node.js 22.12+ and Xcode Command Line Tools for development. This workspace has project-local Rust under `.tools`; no shell profile was changed.
 
 ```sh
