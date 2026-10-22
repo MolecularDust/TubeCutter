@@ -155,3 +155,13 @@ Frontend production build, lint, and eighteen tests pass, including the supplied
 Native QA used a separate build identifier/settings directory and anonymous metadata extraction for the public Blender video. The screenshot's exact timestamps produced Length7 and the expected padded summary in WKWebView. Length+ changed Out253.440→254.440 and Length7→8; Padding02→03 changed Length7→9 without moving raw In/Out. The In down button preserved milliseconds while changing250.440→249.440. Reset restored0–635s, Padding02, Length635, and Entire video. With raw In0/Out1 and Padding02, Length correctly showed3 and the summary clipped to0–3s. The native screenshot confirmed the fields and Preview/Reset share the same52px-high input row.
 
 The padded0–3s native preview stopped at3.066s and restored Preview selection, confirming it uses the padded endpoint rather than raw Out1s. The isolated QA build was closed afterward; the main app preferences were not changed.
+
+## Zero padding, collapsible settings, and failed-job clearing — 22 October 2026
+
+Padding now initializes to00, and new analysis/Reset restore00. The Download settings disclosure layout follows the YouGlish Downloader implementation while retaining TubeCutter's existing output choices and descriptive text. It starts expanded; the native details/summary toggle preserves field state, and the save destination/Add to Queue controls stay outside the collapsible area.
+
+Clear Finished now enables for and acknowledges completed, canceled, and failed jobs. The existing cleared-ID acknowledgment and delayed-event protection remain in place. Failed jobs also use the reference's red X. Clearing affects queue history, not saved output files; queued, downloading, processing, merging, and paused jobs remain.
+
+Nineteen frontend tests and fifteen native tests pass, along with production build, frontend lint, Rust formatting, and strict Clippy. Tests cover a failed-only queue enabling clearing, removal and late-event suppression for all three terminal states, native acknowledged failed IDs, and preservation of active jobs. Zero-padding range arithmetic is also covered.
+
+Browser verification confirmed Padding displays `00` on launch, Download settings starts expanded, collapses and reopens, preserves a changed container selection, and leaves Save To and Add to Download Queue visible when collapsed. The release app and DMG were rebuilt successfully; signature, bundled runtime, and disk-image verification passed.

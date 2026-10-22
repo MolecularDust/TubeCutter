@@ -183,3 +183,9 @@ export function stepPaddedLength(
   const target = Math.min(duration, paddedEnd + delta);
   return Math.min(duration, Math.max(start + 0.01, target - padding));
 }
+
+export function canClearQueue(jobs: readonly Job[]): boolean {
+  return jobs.some((job) =>
+    ["completed", "canceled", "failed"].includes(job.state),
+  );
+}

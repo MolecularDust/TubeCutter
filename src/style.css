@@ -949,3 +949,26 @@ div.check input {
     grid-row: 3;
   }
 }
+
+.settings-card details summary {
+  font-weight: 650;
+  cursor: pointer;
+  list-style-position: inside;
+  padding: 0 0 14px;
+}
+.settings-card details summary small {
+  float: right;
+  font-weight: 400;
+  color: #7d8290;
+}
+.settings-card details:not([open]) summary {
+  padding-bottom: 16px;
+}
+
+@media (max-width: 780px) {
+  .settings-card details summary small {
+    float: none;
+    display: block;
+    margin: 6px 0 0 19px;
+  }
+}

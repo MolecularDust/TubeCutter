@@ -174,7 +174,7 @@ mod selection_tests {
         assert!(validate(&r).is_err());
     }
     #[test]
-    fn clearing_hides_completed_and_canceled_but_preserves_active_and_failed_jobs() {
+    fn clearing_hides_finished_jobs_and_preserves_active_jobs() {
         let mut jobs = std::collections::HashMap::new();
         for state in [
             "completed",
@@ -204,10 +204,11 @@ mod selection_tests {
         }
         let mut cleared = clear_finished(&mut jobs);
         cleared.sort();
-        assert_eq!(cleared, vec!["canceled", "completed"]);
+        assert_eq!(cleared, vec!["canceled", "completed", "failed"]);
         assert!(jobs["completed"].hidden);
         assert!(jobs["canceled"].hidden);
-        for state in ["downloading", "queued", "paused", "failed"] {
+        assert!(jobs["failed"].hidden);
+        for state in ["downloading", "queued", "paused"] {
             assert!(!jobs[state].hidden);
         }
         // Canceled worker state remains available until its process/files are cleaned up.
@@ -308,7 +309,7 @@ pub fn clear_finished(jobs: &mut std::collections::HashMap<String, Job>) -> Vec<
     let mut cleared = Vec::new();
     // Retain internal records while canceled workers finish cleanup; hide all later events.
     for job in jobs.values_mut() {
-        if ["completed", "canceled"].contains(&job.state.as_str()) {
+        if ["completed", "canceled", "failed"].contains(&job.state.as_str()) {
             job.hidden = true;
             cleared.push(job.id.clone());
         }

@@ -9,6 +9,7 @@ import {
   codecFamily,
   updateQueue,
   clearQueueRows,
+  canClearQueue,
   isTrimmed,
   paddedSection,
   stepPaddedLength,
@@ -93,20 +94,34 @@ describe("clearing completed queue rows", () => {
     message: "",
     path: "",
   });
-  it("removes successful and canceled jobs while preserving new active jobs", () => {
-    const cleared = new Set(["done", "canceled"]);
+  it("enables clearing for failed-only queues and keeps active queues protected", () => {
+    for (const state of ["failed", "canceled", "completed"])
+      expect(canClearQueue([job("finished", state)])).toBe(true);
+    expect(canClearQueue([])).toBe(false);
+    expect(
+      canClearQueue(
+        ["queued", "downloading", "processing", "merging", "paused"].map(
+          (state) => job(state, state),
+        ),
+      ),
+    ).toBe(false);
+  });
+  it("removes successful, failed, and canceled jobs while preserving new active jobs", () => {
+    const cleared = new Set(["done", "canceled", "failed"]);
     const rows = [
       job("done", "completed"),
       job("canceled", "canceled"),
+      job("failed", "failed"),
       job("new", "downloading"),
     ];
     expect(clearQueueRows(rows, cleared).map((j) => j.id)).toEqual(["new"]);
   });
   it("ignores delayed completion and cleanup events after clearing", () => {
-    const cleared = new Set(["done", "canceled"]);
+    const cleared = new Set(["done", "canceled", "failed"]);
     let rows = [job("active", "downloading")];
     rows = updateQueue(rows, job("done", "completed"), cleared);
     rows = updateQueue(rows, job("canceled", "canceled"), cleared);
+    rows = updateQueue(rows, job("failed", "failed"), cleared);
     expect(rows.map((j) => j.id)).toEqual(["active"]);
     expect(
       updateQueue(rows, job("next", "completed"), cleared).map((j) => j.id),
@@ -155,6 +170,7 @@ describe("timeline scrubbing", () => {
 
 describe("padding", () => {
   it("extends both ends without accumulating", () => {
+    expect(paddedSection(250.44, 253.44, 0, 635)).toEqual([250.44, 253.44]);
     expect(paddedSection(250.44, 253.44, 2, 635)).toEqual([248.44, 255.44]);
     expect(paddedSection(10, 20, 3, 100)).toEqual([7, 23]);
     expect(paddedSection(10, 20, 0, 100)).toEqual([10, 20]);

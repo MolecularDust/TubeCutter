@@ -11,6 +11,7 @@ import {
   codecFamily,
   updateQueue,
   clearQueueRows,
+  canClearQueue,
   isTrimmed,
   paddedSection,
   stepPaddedLength,
@@ -32,6 +33,7 @@ const defaults: Settings = {
 function App() {
   const [settings, setSettings] = useState<Settings>(defaults),
     [showSettings, setShowSettings] = useState(false),
+    [downloadSettingsOpen, setDownloadSettingsOpen] = useState(true),
     [url, setUrl] = useState(""),
     [fileName, setFileName] = useState(""),
     [fileNameEditing, setFileNameEditing] = useState(false),
@@ -46,7 +48,7 @@ function App() {
     [inValid, setInValid] = useState(true),
     [outValid, setOutValid] = useState(true),
     [resetVersion, setResetVersion] = useState(0),
-    [padding, setPadding] = useState(2),
+    [padding, setPadding] = useState(0),
     [paddingEditing, setPaddingEditing] = useState(false),
     [start, setStart] = useState(0),
     [end, setEnd] = useState(0),
@@ -227,7 +229,7 @@ function App() {
         setFileNameEdited(false);
         setStart(0);
         setEnd(v.duration);
-        setPadding(2);
+        setPadding(0);
         setPaddingEditing(false);
         setInValid(true);
         setOutValid(true);
@@ -659,7 +661,7 @@ function App() {
                   onClick={() => {
                     setStart(0);
                     setEnd(duration);
-                    setPadding(2);
+                    setPadding(0);
                     setInValid(true);
                     setOutValid(true);
                     setResetVersion((n) => n + 1);
@@ -728,96 +730,100 @@ function App() {
           </div>
         </section>
         <section className="settings-card">
-          <div className="section-heading">
-            <h2>Download settings</h2>
-            <span>Make it yours</span>
-          </div>
-          <div className="options">
-            <Field label="Container">
-              <select
-                value={container}
-                onChange={(e) => setContainer(e.target.value)}
-              >
-                <option value="mp4">MP4</option>
-                <option value="mkv">MKV</option>
-              </select>
-            </Field>
-            <Field label="Resolution">
-              <select
-                disabled={mode === "audio"}
-                value={resolution}
-                onChange={(e) => {
-                  setResolution(e.target.value);
-                  setCodec("auto");
-                }}
-              >
-                <option value="">Best available</option>
-                {heights.map((h) => (
-                  <option key={h} value={h}>
-                    {h === 2160 ? "4K · " : h === 1440 ? "2K · " : ""}
-                    {h}p
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Video codec">
-              <select
-                disabled={mode === "audio"}
-                value={codec}
-                onChange={(e) => setCodec(e.target.value)}
-              >
-                <option value="auto">Automatic</option>
-                {[
-                  ["h264", "H.264"],
-                  ["hevc", "H.265 / HEVC"],
-                  ["av1", "AV1"],
-                  ["vp9", "VP9"],
-                ].map(([v, l]) => (
-                  <option key={v} value={v} disabled={!codecs.has(v)}>
-                    {l}
-                    {!codecs.has(v) ? " · unavailable" : ""}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Audio">
-              <select
-                value={audio}
-                disabled={mode === "audio"}
-                onChange={(e) => setAudio(e.target.value)}
-              >
-                <option value="best">Best available</option>
-                <option value="original">Original compatible stream</option>
-                <option value="none">No audio</option>
-              </select>
-            </Field>
-            <Field label="Subtitles">
-              <select
-                value={subtitle}
-                onChange={(e) => setSubtitle(e.target.value)}
-              >
-                <option value="">None</option>
-                {Object.keys(video?.subtitles ?? {}).map((l) => (
-                  <option key={l}>{l}</option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Download mode">
-              <select value={mode} onChange={(e) => setMode(e.target.value)}>
-                <option value="video">Video + audio</option>
-                <option value="audio">Audio only</option>
-              </select>
-            </Field>
-          </div>
-          <p className="format-note">
-            ⓘ{" "}
-            {precise && section
-              ? "Precise cut re-encodes. Resolution is retained and the output duration is checked."
-              : compatible
-                ? "Original streams are preserved where the selected container supports them; separate tracks require merging."
-                : "This codec may not be supported in MP4. Choose MKV to preserve the original stream."}{" "}
-            Unavailable combinations fail explicitly.
-          </p>
+          <details
+            open={downloadSettingsOpen}
+            onToggle={(e) => setDownloadSettingsOpen(e.currentTarget.open)}
+          >
+            <summary>
+              Download settings <small>Make it yours</small>
+            </summary>
+            <div className="options">
+              <Field label="Container">
+                <select
+                  value={container}
+                  onChange={(e) => setContainer(e.target.value)}
+                >
+                  <option value="mp4">MP4</option>
+                  <option value="mkv">MKV</option>
+                </select>
+              </Field>
+              <Field label="Resolution">
+                <select
+                  disabled={mode === "audio"}
+                  value={resolution}
+                  onChange={(e) => {
+                    setResolution(e.target.value);
+                    setCodec("auto");
+                  }}
+                >
+                  <option value="">Best available</option>
+                  {heights.map((h) => (
+                    <option key={h} value={h}>
+                      {h === 2160 ? "4K · " : h === 1440 ? "2K · " : ""}
+                      {h}p
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Video codec">
+                <select
+                  disabled={mode === "audio"}
+                  value={codec}
+                  onChange={(e) => setCodec(e.target.value)}
+                >
+                  <option value="auto">Automatic</option>
+                  {[
+                    ["h264", "H.264"],
+                    ["hevc", "H.265 / HEVC"],
+                    ["av1", "AV1"],
+                    ["vp9", "VP9"],
+                  ].map(([v, l]) => (
+                    <option key={v} value={v} disabled={!codecs.has(v)}>
+                      {l}
+                      {!codecs.has(v) ? " · unavailable" : ""}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Audio">
+                <select
+                  value={audio}
+                  disabled={mode === "audio"}
+                  onChange={(e) => setAudio(e.target.value)}
+                >
+                  <option value="best">Best available</option>
+                  <option value="original">Original compatible stream</option>
+                  <option value="none">No audio</option>
+                </select>
+              </Field>
+              <Field label="Subtitles">
+                <select
+                  value={subtitle}
+                  onChange={(e) => setSubtitle(e.target.value)}
+                >
+                  <option value="">None</option>
+                  {Object.keys(video?.subtitles ?? {}).map((l) => (
+                    <option key={l}>{l}</option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Download mode">
+                <select value={mode} onChange={(e) => setMode(e.target.value)}>
+                  <option value="video">Video + audio</option>
+                  <option value="audio">Audio only</option>
+                </select>
+              </Field>
+            </div>
+            <p className="format-note">
+              ⓘ{" "}
+              {precise && section
+                ? "Precise cut re-encodes. Resolution is retained and the output duration is checked."
+                : compatible
+                  ? "Original streams are preserved where the selected container supports them; separate tracks require merging."
+                  : "This codec may not be supported in MP4. Choose MKV to preserve the original stream."}{" "}
+              Unavailable combinations fail explicitly.
+            </p>
+          </details>
           <div className="destination">
             <svg
               className="folder-icon"
@@ -868,9 +874,7 @@ function App() {
               Download queue <span className="count">{jobs.length}</span>
             </h2>
             <button
-              disabled={
-                !jobs.some((j) => ["completed", "canceled"].includes(j.state))
-              }
+              disabled={!canClearQueue(jobs)}
               onClick={() =>
                 act(async () => {
                   const cleared = await invoke<string[]>("clear_completed");
@@ -881,7 +885,7 @@ function App() {
                 })
               }
             >
-              Clear Completed
+              Clear Finished
             </button>
           </div>
           {!jobs.length ? (
@@ -898,7 +902,7 @@ function App() {
                 <div className="job-icon" aria-hidden="true">
                   {j.state === "completed" ? (
                     <span className="queue-checkmark">✓</span>
-                  ) : j.state === "canceled" ? (
+                  ) : ["canceled", "failed"].includes(j.state) ? (
                     <span className="queue-canceled">✕</span>
                   ) : (
                     <span
