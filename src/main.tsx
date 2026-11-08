@@ -1000,10 +1000,18 @@ function App() {
             </div>
             <h3>YouTube account</h3>
             <p>
-              Sign in to Google first, then connect YouTube and select your
-              channel if asked. The login stays in the app’s own browser
-              storage, so no external browser or Keychain access is needed.
-              Then choose “App’s YouTube session” below.
+              Recommended: sign in to YouTube in your normal browser. Passkeys
+              and security keys work there. Then choose that browser under
+              Download authentication below. The app never sees your password.
+            </p>
+            <div className="playback-test-actions">
+              <button onClick={() => act(() => invoke("open_browser_sign_in"))}>
+                Sign in in my browser ↗
+              </button>
+            </div>
+            <p>
+              Alternatively, sign in inside the app. Passkeys and security keys
+              may fail there, so use your password and phone confirmation.
             </p>
             <div className="playback-test-actions">
               <button

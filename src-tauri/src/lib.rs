@@ -119,6 +119,23 @@ async fn pick_cookies() -> Option<String> {
 }
 /// Open Google's own sign-in page in a persistent webview shared with the app. Credentials are
 /// typed on Google's pages; the app never sees them. The window has no Tauri IPC capability.
+/// Open Google sign-in in the default browser, where passkeys and security keys are supported.
+/// The app never receives the login; choose that browser under Download authentication afterwards.
+#[tauri::command]
+fn open_browser_sign_in() -> Result<(), String> {
+    const SIGN_IN: &str =
+        "https://accounts.google.com/ServiceLogin?service=youtube&continue=https%3A%2F%2Fwww.youtube.com%2F";
+    let mut command = if cfg!(target_os = "macos") {
+        std::process::Command::new("/usr/bin/open")
+    } else {
+        std::process::Command::new("explorer.exe")
+    };
+    command
+        .arg(SIGN_IN)
+        .spawn()
+        .map_err(|_| "Could not open the browser")?;
+    Ok(())
+}
 // Async on purpose: a synchronous command that creates a webview window can deadlock on Windows.
 #[tauri::command]
 async fn youtube_sign_in_window(app: tauri::AppHandle) -> Result<(), String> {
@@ -871,6 +888,7 @@ pub fn run() {
             save_settings,
             pick_folder,
             pick_cookies,
+            open_browser_sign_in,
             youtube_sign_in_window,
             youtube_connect_window,
             player_origin,
