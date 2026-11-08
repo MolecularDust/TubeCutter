@@ -119,12 +119,13 @@ async fn pick_cookies() -> Option<String> {
 }
 /// Open Google's own sign-in page in a persistent webview shared with the app. Credentials are
 /// typed on Google's pages; the app never sees them. The window has no Tauri IPC capability.
+// Async on purpose: a synchronous command that creates a webview window can deadlock on Windows.
 #[tauri::command]
-fn youtube_sign_in_window(app: tauri::AppHandle) -> Result<(), String> {
+async fn youtube_sign_in_window(app: tauri::AppHandle) -> Result<(), String> {
     show_session_window(app, url::Url::parse("https://accounts.google.com/").unwrap())
 }
 #[tauri::command]
-fn youtube_connect_window(app: tauri::AppHandle) -> Result<(), String> {
+async fn youtube_connect_window(app: tauri::AppHandle) -> Result<(), String> {
     show_session_window(app, url::Url::parse("https://www.youtube.com/signin").unwrap())
 }
 fn show_session_window(app: tauri::AppHandle, url: url::Url) -> Result<(), String> {
