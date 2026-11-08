@@ -25,6 +25,9 @@ import {
 } from "./domain";
 import "./style.css";
 import appIcon from "./assets/app-icon.png";
+// Browser sign-in is hidden on Windows: Chromium browsers lock their cookie
+// file while running, so the button can't help there.
+const isWindows = navigator.userAgent.includes("Windows");
 const defaults: Settings = {
   destination: "",
   browser: "",
@@ -999,20 +1002,33 @@ function App() {
               <button onClick={() => setShowSettings(false)}>Done</button>
             </div>
             <h3>YouTube account</h3>
-            <p>
-              Recommended: sign in to YouTube in your normal browser. Passkeys
-              and security keys work there. Then choose that browser under
-              Download authentication below. The app never sees your password.
-            </p>
-            <div className="playback-test-actions">
-              <button onClick={() => act(() => invoke("open_browser_sign_in"))}>
-                Sign in in my browser ↗
-              </button>
-            </div>
-            <p>
-              Alternatively, sign in inside the app. Passkeys and security keys
-              may fail there, so use your password and phone confirmation.
-            </p>
+            {isWindows ? (
+              <p>
+                Sign in inside the app. Passkeys and security keys may fail
+                there, so use your password and phone confirmation.
+              </p>
+            ) : (
+              <>
+                <p>
+                  Recommended: sign in to YouTube in your normal browser.
+                  Passkeys and security keys work there. Then choose that
+                  browser under Download authentication below. The app never
+                  sees your password.
+                </p>
+                <div className="playback-test-actions">
+                  <button
+                    onClick={() => act(() => invoke("open_browser_sign_in"))}
+                  >
+                    Sign in in my browser ↗
+                  </button>
+                </div>
+                <p>
+                  Alternatively, sign in inside the app. Passkeys and security
+                  keys may fail there, so use your password and phone
+                  confirmation.
+                </p>
+              </>
+            )}
             <div className="playback-test-actions">
               <button
                 onClick={() => act(() => invoke("youtube_sign_in_window"))}
