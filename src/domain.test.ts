@@ -13,6 +13,7 @@ import {
   isTrimmed,
   paddedSection,
   stepPaddedLength,
+  outFromPaddedLength,
   timelineTime,
   acceptPlayerTime,
   type Job,
@@ -194,5 +195,22 @@ describe("length stepper with padding", () => {
     expect(stepPaddedLength(10, 100, 2, 100, -1)).toBe(97);
     expect(stepPaddedLength(10, 98, 2, 100, 1)).toBe(98);
     expect(stepPaddedLength(10, 10.1, 2, 100, -1)).toBe(10.01);
+  });
+});
+
+describe("editable padded length", () => {
+  it("adjusts Out for typed seconds including clipped start padding", () => {
+    expect(outFromPaddedLength(321, 377.989, 2, 1081, 60)).toBe(377);
+    expect(outFromPaddedLength(321, 377.989, 2, 1081, 10)).toBe(327);
+    expect(outFromPaddedLength(2, 20, 5, 100, 30.125)).toBe(25.125);
+    expect(outFromPaddedLength(10, 20, 0, 100, 2.25)).toBe(12.25);
+  });
+  it("preserves an unchanged length when end padding is clipped", () => {
+    expect(outFromPaddedLength(10, 100, 2, 100, 92)).toBe(100);
+    expect(outFromPaddedLength(10, 100, 2, 100, 91)).toBe(97);
+  });
+  it("rejects lengths outside the video or too short for the padding", () => {
+    for (const length of [0, -1, NaN, Infinity, 93, 4])
+      expect(() => outFromPaddedLength(10, 20, 2, 100, length)).toThrow();
   });
 });

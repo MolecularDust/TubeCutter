@@ -4,11 +4,11 @@
   "libraryValidationException": "yt-dlp only; user-approved",
   "deno": "JIT disabled",
   "files": {
-    "video-downloader": "80044e5299617853c271c023a0c7d82336fa029e2f0d14241e9d64910b0fa982",
+    "video-downloader": "aaa0d8cabaec7e64e494b7db17180c9839bedae51c06dad5572538eae77e4c7f",
     "yt-dlp": "709ef6b02058848ff58b248f962474dac21683c30b43fb4c2ee5e2bd44617e72",
     "ffmpeg": "5915431eb00756dfd11fb0fe15706f849785506d81fa82de834db9b514031ec1",
     "ffprobe": "94442dd0762cfb158db96471d2a43c138dcbe63db3bb669812c8b741ab053bc3",
     "deno": "f96d2c43c99c721b8c927faa6e6a6fe86949281ac53e258669c96f74817cefa4",
-    "TubeCutter_0.1.0_aarch64.dmg": "daffa89738ac90cc6f25abc847758697f401a94302552d1c0f2a2c8b5373d0b6"
+    "TubeCutter_0.1.0_aarch64.dmg": "554642a05aad1d2b375363d35fc4842b6b23fb9880162c945bf948e383c3903b"
   }
 }

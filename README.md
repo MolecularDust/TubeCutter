@@ -47,7 +47,9 @@ Binaries are excluded from Git. The installed versions/hashes are recorded in `d
 6. Download settings starts expanded; click its heading to collapse or reopen it. Select a container, actual source resolution, codec, audio, subtitles and mode; add to the queue.
 7. Pause/resume or cancel active downloads. Retry failures and reveal completed files in Finder. Clear Finished removes completed, canceled, and failed rows while preserving active jobs and saved files.
 
-Account & Settings defaults to anonymous. Selecting a browser explicitly authorizes subsequent access to that browser's cookies and may trigger OS permissions. Do not import or share anyone else's cookies. Only paths/preferences are stored in the app config directory. Authentication is optional.
+Account & Settings defaults to anonymous. **Sign in to Google** / **Connect YouTube** open Google's own pages in an app window whose login persists in the app's webview storage; choosing *App's YouTube session* then gives yt-dlp a private, per-job cookie snapshot (mode 0600, deleted afterward and swept at startup) with no browser or Keychain access.
+
+Speed: yt-dlp ships unpacked (starts in ~0.2 s instead of re-extracting itself each run), Analyze's metadata is reused by the matching download for up to 20 minutes (with a fresh-extraction retry if it fails), and yt-dlp uses a private cache folder. Set `TUBECUTTER_NO_CACHE=1` to compare without the cache. Selecting a browser explicitly authorizes subsequent access to that browser's cookies and may trigger OS permissions. Do not import or share anyone else's cookies. Only paths/preferences are stored in the app config directory. Authentication is optional.
 
 ## Checks
 

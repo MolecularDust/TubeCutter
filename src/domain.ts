@@ -184,6 +184,29 @@ export function stepPaddedLength(
   return Math.min(duration, Math.max(start + 0.01, target - padding));
 }
 
+export function outFromPaddedLength(
+  start: number,
+  end: number,
+  padding: number,
+  duration: number,
+  length: number,
+): number {
+  const [clipStart, clipEnd] = paddedSection(start, end, padding, duration);
+  const target = Math.round((clipStart + length) * 1000) / 1000;
+  const extra = Math.max(0, Math.min(99, Math.trunc(padding)));
+  const out = target === clipEnd ? end : target - extra;
+  if (
+    !Number.isFinite(length) ||
+    length <= 0 ||
+    target > duration ||
+    !validSection(start, out, duration)
+  )
+    throw Error(
+      "Length must be positive and fit within the video and padding.",
+    );
+  return Math.round(out * 1000) / 1000;
+}
+
 export function canClearQueue(jobs: readonly Job[]): boolean {
   return jobs.some((job) =>
     ["completed", "canceled", "failed"].includes(job.state),

@@ -972,3 +972,11 @@ div.check input {
     margin: 6px 0 0 19px;
   }
 }
+
+.playback-test-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0 16px;
+}

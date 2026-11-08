@@ -1,6 +1,20 @@
 use std::{path::PathBuf, process::Command};
 pub fn binary(name: &str) -> Result<PathBuf, String> {
     let exe = std::env::current_exe().map_err(|_| "Cannot locate application")?;
+    if name == "yt-dlp" {
+        // Unpacked build: starts in ~0.2 s instead of unpacking itself on every launch.
+        let unpacked = exe.parent().unwrap().join("../Resources/yt-dlp/yt-dlp_macos");
+        if unpacked.is_file() {
+            return Ok(unpacked);
+        }
+        if cfg!(debug_assertions) {
+            let local = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("../.tools/yt-dlp-dir/yt-dlp_macos");
+            if local.is_file() {
+                return Ok(local);
+            }
+        }
+    }
     let bundled = exe.parent().unwrap().join(name);
     if bundled.is_file() {
         return Ok(bundled);
@@ -25,6 +39,29 @@ pub fn binary(name: &str) -> Result<PathBuf, String> {
     Err(format!(
         "{name} is missing. Prepare media tools; see README."
     ))
+}
+static CACHE_DIR: std::sync::OnceLock<PathBuf> = std::sync::OnceLock::new();
+/// Private folder where yt-dlp keeps downloaded player scripts and solved challenges.
+pub fn set_cache_dir(path: PathBuf) {
+    let _ = std::fs::create_dir_all(&path);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let _ = std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o700));
+    }
+    let _ = CACHE_DIR.set(path);
+}
+/// The yt-dlp cache folder, unless caching is disabled (TUBECUTTER_NO_CACHE=1, for timing comparisons).
+pub fn cache_dir() -> Option<&'static PathBuf> {
+    if std::env::var_os("TUBECUTTER_NO_CACHE").is_some_and(|v| v == "1") {
+        return None;
+    }
+    CACHE_DIR.get()
+}
+/// Whether a process id belongs to a running process. Used to recognise leftovers of dead instances.
+pub fn process_alive(pid: u32) -> bool {
+    let r = unsafe { libc::kill(pid as i32, 0) };
+    r == 0 || std::io::Error::last_os_error().raw_os_error() == Some(libc::EPERM)
 }
 pub fn command(name: &str) -> Result<Command, String> {
     let mut c = Command::new(binary(name)?);
@@ -94,5 +131,15 @@ mod tests {
         signal(pid, "resume").unwrap();
         signal(pid, "cancel").unwrap();
         assert_eq!(child.wait().unwrap().signal(), Some(libc::SIGKILL));
+    }
+}
+
+#[cfg(test)]
+mod process_tests {
+    use super::*;
+    #[test]
+    fn own_process_is_alive_and_an_impossible_pid_is_not() {
+        assert!(process_alive(std::process::id()));
+        assert!(!process_alive(2_147_483_646));
     }
 }

@@ -1,7 +1,9 @@
 mod download_files;
+mod metadata;
 mod model;
 mod platform;
 mod player;
+mod session;
 use model::*;
 use std::{
     collections::HashMap,
@@ -17,6 +19,7 @@ struct Backend {
     origin: String,
     sender: std::sync::mpsc::Sender<(String, Settings)>,
     analyzer: Arc<Mutex<Option<u32>>>,
+    metadata: Arc<metadata::MetadataCache>,
 }
 fn settings_path(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     let p = app.path().app_config_dir().map_err(|e| e.to_string())?;
@@ -44,7 +47,6 @@ fn base(s: &Settings) -> Result<std::process::Command, String> {
         "--ignore-config",
         "--no-playlist",
         "--no-warnings",
-        "--no-cache-dir",
         "--socket-timeout",
         "20",
         "--retries",
@@ -56,6 +58,10 @@ fn base(s: &Settings) -> Result<std::process::Command, String> {
     if let Ok(p) = platform::binary("deno") {
         c.arg("--js-runtimes").arg(format!("deno:{}", p.display()));
     }
+    match platform::cache_dir() {
+        Some(dir) => c.arg("--cache-dir").arg(dir),
+        None => c.arg("--no-cache-dir"),
+    };
     auth(&mut c, s)?;
     Ok(c)
 }
@@ -111,14 +117,49 @@ async fn pick_cookies() -> Option<String> {
         .await
         .map(|f| f.path().to_string_lossy().into_owned())
 }
+/// Open Google's own sign-in page in a persistent webview shared with the app. Credentials are
+/// typed on Google's pages; the app never sees them. The window has no Tauri IPC capability.
+#[tauri::command]
+fn youtube_sign_in_window(app: tauri::AppHandle) -> Result<(), String> {
+    show_session_window(app, url::Url::parse("https://accounts.google.com/").unwrap())
+}
+#[tauri::command]
+fn youtube_connect_window(app: tauri::AppHandle) -> Result<(), String> {
+    show_session_window(app, url::Url::parse("https://www.youtube.com/signin").unwrap())
+}
+fn show_session_window(app: tauri::AppHandle, url: url::Url) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window("youtube-account") {
+        window
+            .navigate(url)
+            .map_err(|_| "Could not load session page")?;
+        window.show().map_err(|_| "Could not show session window")?;
+        window
+            .set_focus()
+            .map_err(|_| "Could not focus session window")?;
+    } else {
+        // The default persistent website store is shared by app webviews; do not use an ephemeral profile.
+        tauri::WebviewWindowBuilder::new(&app, "youtube-account", tauri::WebviewUrl::External(url))
+            .title("TubeCutter — YouTube account")
+            .inner_size(1080., 900.)
+            .build()
+            .map_err(|_| "Could not open the account window")?;
+    }
+    Ok(())
+}
 #[tauri::command]
 fn player_origin(s: State<Backend>) -> String {
     s.origin.clone()
 }
 #[tauri::command]
-async fn analyze(url: String, s: State<'_, Backend>) -> Result<serde_json::Value, String> {
+async fn analyze(
+    app: tauri::AppHandle,
+    url: String,
+    s: State<'_, Backend>,
+) -> Result<serde_json::Value, String> {
     let normalized = normalize(&url)?;
     let settings = s.settings.lock().unwrap().clone();
+    let settings = session::prepare(&app, settings)?;
+    let metadata = s.metadata.clone();
     let analyzer = s.analyzer.clone();
     {
         let mut active = analyzer.lock().unwrap();
@@ -137,6 +178,8 @@ async fn analyze(url: String, s: State<'_, Backend>) -> Result<serde_json::Value
         if !o.status.success(){return Err(safe_error(&String::from_utf8_lossy(&o.stderr)))}
         let v:serde_json::Value=serde_json::from_slice(&o.stdout).map_err(|_|"Invalid metadata response")?;
         if v["is_live"].as_bool()==Some(true){return Err("Live videos are not supported; choose a finished video".into())}
+        // Keep the full metadata so the download of this video can skip extracting it again.
+        if let Some(id)=v["id"].as_str(){metadata.put(id,o.stdout.clone())}
         let formats=v["formats"].as_array().map(|a|a.iter().map(|f|serde_json::json!({"format_id":f["format_id"],"height":f["height"],"vcodec":f["vcodec"],"acodec":f["acodec"],"ext":f["ext"]})).collect::<Vec<_>>());
         Ok(serde_json::json!({"id":v["id"],"url":normalized,"title":v["title"],"channel":v["channel"],"duration":v["duration"],"thumbnail":v["thumbnail"],"formats":formats,"subtitles":v["subtitles"]}))
     }).await.map_err(|_|"Metadata worker stopped".to_string());
@@ -160,16 +203,66 @@ fn update(
         }
     }
 }
+/// Run one queued job with a fresh cookie snapshot, reusing metadata from Analyze when available.
+fn run_job(
+    app: &tauri::AppHandle,
+    jobs: &Arc<Mutex<HashMap<String, Job>>>,
+    id: &str,
+    settings: Settings,
+) {
+    let settings = match session::prepare(app, settings) {
+        Ok(settings) => settings,
+        Err(e) => {
+            update(app, jobs, id, |j| {
+                if j.state != "canceled" {
+                    j.state = "failed".into();
+                    j.message = e;
+                }
+                j.pid = 0;
+            });
+            return;
+        }
+    };
+    let video = jobs.lock().unwrap()[id].request.url.clone();
+    let video = normalize(&video)
+        .ok()
+        .and_then(|u| u.rsplit('=').next().map(str::to_string));
+    let cache = app.state::<Backend>().metadata.clone();
+    let retry = match video.as_deref().and_then(|v| cache.get(v)) {
+        Some(saved) => download(
+            app.clone(),
+            jobs.clone(),
+            id.to_string(),
+            settings.clone(),
+            Some(saved),
+        ),
+        None => true,
+    };
+    if retry {
+        // No saved metadata, or it no longer worked (for example its links expired).
+        if let Some(v) = video.as_deref() {
+            cache.forget(v);
+        }
+        download(app.clone(), jobs.clone(), id.to_string(), settings, None);
+    }
+}
+/// Returns true when it used saved metadata and the download failed in a way a fresh extraction
+/// might fix; the caller then runs it again without the saved metadata.
 fn download(
     app: tauri::AppHandle,
     jobs: Arc<Mutex<HashMap<String, Job>>>,
     id: String,
     s: Settings,
-) {
+    saved: Option<Arc<Vec<u8>>>,
+) -> bool {
     let r = jobs.lock().unwrap()[&id].request.clone();
     let mut files = None;
+    let mut retry_fresh = false;
     let result = (|| -> Result<(), String> {
         let mut c = base(&s)?;
+        let info_file = saved
+            .as_ref()
+            .and_then(|json| session::write_metadata(&app, json).ok());
         let destination = PathBuf::from(&r.destination)
             .canonicalize()
             .map_err(|_| "Destination is unavailable")?;
@@ -248,10 +341,11 @@ fn download(
                 c.args(["--downloader-args", "ffmpeg_o:-progress pipe:1 -nostats"]);
             }
         }
-        c.arg("--")
-            .arg(normalize(&r.url)?)
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped());
+        match &info_file {
+            Some(file) => c.arg("--load-info-json").arg(&file.0),
+            None => c.arg("--").arg(normalize(&r.url)?),
+        };
+        c.stdout(Stdio::piped()).stderr(Stdio::piped());
         let mut child = c.spawn().map_err(|_| "Unable to start downloader")?;
         {
             let mut map = jobs.lock().unwrap();
@@ -342,6 +436,10 @@ fn download(
             return Ok(());
         }
         if !status.success() {
+            if info_file.is_some() && !errors.to_lowercase().contains("http error 429") {
+                retry_fresh = true;
+                return Ok(());
+            }
             return Err(safe_error(&errors));
         }
         let path = jobs.lock().unwrap()[&id].path.clone();
@@ -473,6 +571,7 @@ fn download(
             j.pid = 0;
         });
     }
+    retry_fresh
 }
 // Some HTTP delivery formats retain a positive PTS origin when stream-copied.
 // Normalize that origin locally without downloading or encoding any additional media.
@@ -621,6 +720,8 @@ fn enqueue(app: tauri::AppHandle, s: State<Backend>, request: Request) -> Result
     s.jobs.lock().unwrap().insert(id.clone(), job.clone());
     let _ = app.emit("job", job);
     let settings = s.settings.lock().unwrap().clone();
+    // The cookie snapshot is taken when the job starts, not while it waits in the queue.
+    session::preflight(&app, &settings)?;
     s.sender
         .send((id.clone(), settings))
         .map_err(|_| "Download worker is unavailable")?;
@@ -722,6 +823,12 @@ pub fn run() {
                 .and_then(|p| std::fs::read(p).ok())
                 .and_then(|b| serde_json::from_slice(&b).ok())
                 .unwrap_or_default();
+            if let Ok(dir) = session::dir(app.handle()) {
+                session::sweep_stale(&dir);
+            }
+            if let Ok(cache) = app.path().app_cache_dir() {
+                platform::set_cache_dir(cache.join("yt-dlp"));
+            }
             let jobs: Arc<Mutex<HashMap<String, Job>>> = Arc::new(Mutex::new(HashMap::new()));
             let (sender, receiver) = std::sync::mpsc::channel::<(String, Settings)>();
             let worker_jobs = jobs.clone();
@@ -734,7 +841,7 @@ pub fn run() {
                         .get(&id)
                         .is_some_and(|j| j.state != "canceled")
                     {
-                        download(handle.clone(), worker_jobs.clone(), id, settings);
+                        run_job(&handle, &worker_jobs, &id, settings);
                     }
                 }
             });
@@ -743,6 +850,7 @@ pub fn run() {
                 jobs,
                 sender,
                 analyzer: Arc::new(Mutex::new(None)),
+                metadata: Arc::new(metadata::MetadataCache::default()),
                 origin: player::start().map_err(std::io::Error::other)?,
             });
             Ok(())
@@ -753,6 +861,8 @@ pub fn run() {
             save_settings,
             pick_folder,
             pick_cookies,
+            youtube_sign_in_window,
+            youtube_connect_window,
             player_origin,
             analyze,
             enqueue,
@@ -776,6 +886,9 @@ pub fn run() {
                 if j.pid != 0 {
                     let _ = platform::signal(j.pid, "cancel");
                 }
+            }
+            if let Ok(dir) = session::dir(app) {
+                session::remove_own(&dir);
             }
         }
     });

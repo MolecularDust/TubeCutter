@@ -15,6 +15,7 @@ import {
   isTrimmed,
   paddedSection,
   stepPaddedLength,
+  outFromPaddedLength,
   timelineTime,
   acceptPlayerTime,
   type SeekTarget,
@@ -47,6 +48,7 @@ function App() {
     [previewActive, setPreviewActive] = useState(false),
     [inValid, setInValid] = useState(true),
     [outValid, setOutValid] = useState(true),
+    [lengthValid, setLengthValid] = useState(true),
     [resetVersion, setResetVersion] = useState(0),
     [padding, setPadding] = useState(0),
     [paddingEditing, setPaddingEditing] = useState(false),
@@ -260,7 +262,11 @@ function App() {
     codec === "auto";
   const section = !!video && isTrimmed(clipStart, clipEnd, video.duration);
   const selectionValid =
-    !!video && inValid && outValid && validSection(start, end, video.duration);
+    !!video &&
+    inValid &&
+    outValid &&
+    lengthValid &&
+    validSection(start, end, video.duration);
   const enqueue = () =>
     act(async () => {
       if (!video || !selectionValid)
@@ -330,7 +336,9 @@ function App() {
           <span className="badge">
             ●{" "}
             {settings.browser || settings.cookiesFile
-              ? "Browser session"
+              ? settings.browser === "app"
+                ? "App session"
+                : "Browser session"
               : "Anonymous"}
           </span>
         </div>
@@ -609,30 +617,32 @@ function App() {
                     <br />
                     (seconds)
                   </span>
-                  <div className="number-stepper">
-                    <input
-                      aria-label="Length in seconds"
-                      readOnly
-                      value={Math.round((clipEnd - clipStart) * 1000) / 1000}
-                    />
-                    <StepperButtons
-                      label="Length"
-                      onStep={(delta) => {
-                        setEnd(
-                          stepPaddedLength(
-                            start,
-                            end,
-                            padding,
-                            duration,
-                            delta,
-                          ),
-                        );
-                        setResetVersion((n) => n + 1);
-                        setInValid(true);
-                        setOutValid(true);
-                      }}
-                    />
-                  </div>
+                  <TimeInput
+                    key={`length-${resetVersion}-${start}-${end}-${padding}`}
+                    label="Length"
+                    seconds
+                    value={Math.round((clipEnd - clipStart) * 1000) / 1000}
+                    onValidity={setLengthValid}
+                    onChange={(length) => {
+                      setEnd(
+                        outFromPaddedLength(
+                          start,
+                          end,
+                          padding,
+                          duration,
+                          length,
+                        ),
+                      );
+                    }}
+                    onStep={(delta) => {
+                      setEnd(
+                        stepPaddedLength(start, end, padding, duration, delta),
+                      );
+                      setResetVersion((n) => n + 1);
+                      setInValid(true);
+                      setOutValid(true);
+                    }}
+                  />
                 </div>
                 <button
                   className="preview-button"
@@ -988,9 +998,29 @@ function App() {
               <h2>Account & Settings</h2>
               <button onClick={() => setShowSettings(false)}>Done</button>
             </div>
+            <h3>YouTube account</h3>
             <p>
-              Use an existing browser session for videos you’re authorized to
-              access. Anonymous is the default.
+              Sign in to Google first, then connect YouTube and select your
+              channel if asked. The login stays in the app’s own browser
+              storage, so no external browser or Keychain access is needed.
+              Then choose “App’s YouTube session” below.
+            </p>
+            <div className="playback-test-actions">
+              <button
+                onClick={() => act(() => invoke("youtube_sign_in_window"))}
+              >
+                1. Sign in to Google ↗
+              </button>
+              <button
+                onClick={() => act(() => invoke("youtube_connect_window"))}
+              >
+                2. Connect YouTube ↗
+              </button>
+            </div>
+            <h3>Download authentication</h3>
+            <p>
+              Use the app’s YouTube session or an existing browser session for
+              videos you’re authorized to access. Anonymous is the default.
             </p>
             <Field label="Authentication">
               <select
@@ -1015,6 +1045,7 @@ function App() {
                 }
               >
                 <option value="">Anonymous</option>
+                <option value="app">App’s YouTube session</option>
                 <option value="opera">Opera</option>
                 <option value="chrome">Chrome</option>
                 <option value="firefox">Firefox</option>
@@ -1094,22 +1125,31 @@ function TimeInput({
   onChange,
   onValidity,
   label,
+  seconds = false,
+  onStep,
 }: {
   value: number;
   onChange: (n: number) => void;
   onValidity: (valid: boolean) => void;
   label: string;
+  seconds?: boolean;
+  onStep?: (delta: number) => void;
 }) {
-  const [text, setText] = useState(preciseTimestamp(value)),
+  const format = (n: number) => (seconds ? String(n) : preciseTimestamp(n));
+  const [text, setText] = useState(format(value)),
     [invalid, setInvalid] = useState("");
   useEffect(() => {
-    setText(preciseTimestamp(value));
+    setText(seconds ? String(value) : preciseTimestamp(value));
     setInvalid("");
     onValidity(true);
-  }, [value, onValidity]);
+  }, [value, onValidity, seconds]);
   const commit = () => {
     try {
-      onChange(parseTimestamp(text));
+      if (seconds && !/^\d+(\.\d{1,3})?$/.test(text))
+        throw Error(
+          "Enter seconds, optionally with up to three decimal places.",
+        );
+      onChange(seconds ? Number(text) : parseTimestamp(text));
       setInvalid("");
       onValidity(true);
     } catch (e) {
@@ -1119,7 +1159,8 @@ function TimeInput({
   };
   const step = (delta: number) => {
     try {
-      onChange(Math.round((value + delta) * 1000) / 1000);
+      if (onStep) onStep(delta);
+      else onChange(Math.round((value + delta) * 1000) / 1000);
       setInvalid("");
       onValidity(true);
     } catch (e) {
@@ -1131,7 +1172,8 @@ function TimeInput({
     <div className="time-input">
       <div className="number-stepper">
         <input
-          aria-label={`${label} timestamp`}
+          aria-label={`${label} ${seconds ? "in seconds" : "timestamp"}`}
+          inputMode={seconds ? "decimal" : undefined}
           value={text}
           aria-invalid={!!invalid}
           onChange={(e) => {

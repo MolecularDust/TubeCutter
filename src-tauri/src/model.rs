@@ -2,6 +2,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Settings {
+    #[serde(skip)]
+    pub session_file: Option<std::sync::Arc<crate::session::CookieFile>>,
     pub destination: String,
     pub browser: String,
     pub cookies_file: String,

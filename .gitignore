@@ -18,3 +18,4 @@ src-tauri/gen/
 *.pfx
 Thumbs.db
 Desktop.ini
+src-tauri/yt-dlp-macos/
