@@ -128,7 +128,10 @@ fn open_browser_sign_in() -> Result<(), String> {
     let mut command = if cfg!(target_os = "macos") {
         std::process::Command::new("/usr/bin/open")
     } else {
-        std::process::Command::new("explorer.exe")
+        // explorer.exe can open a folder for this URL instead of the browser.
+        let mut c = std::process::Command::new("rundll32.exe");
+        c.arg("url.dll,FileProtocolHandler");
+        c
     };
     command
         .arg(SIGN_IN)
