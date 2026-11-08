@@ -21,14 +21,14 @@ if (!existsSync(makensis))
   throw Error(
     `makensis not found at ${makensis}. Run npm run package:windows once so Tauri downloads NSIS.`,
   );
-const exe = resolve("src-tauri/target/release/video-downloader.exe");
+const exe = resolve("src-tauri/target/release/tubecutter.exe");
 if (!existsSync(exe))
   throw Error(`Release build missing: ${exe}. Run npm run package:windows first.`);
 // Stage the same files the Tauri installer ships, in the layout the app expects.
 const payload = resolve(".tools/installer/payload");
 rmSync(payload, { recursive: true, force: true });
 mkdirSync(join(payload, "resources"), { recursive: true });
-copyFileSync(exe, join(payload, "video-downloader.exe"));
+copyFileSync(exe, join(payload, "tubecutter.exe"));
 for (const name of ["yt-dlp", "ffmpeg", "ffprobe", "deno"])
   copyFileSync(
     resolve(`src-tauri/binaries/${name}-${target}.exe`),

@@ -46,7 +46,7 @@ run("codesign", [
 run("codesign", ["--force", "--options", "runtime", "--sign", "-", app]);
 run("codesign", ["--verify", "--deep", "--strict", app]);
 for (const name of [
-  "video-downloader",
+  "tubecutter",
   "yt-dlp",
   "ffmpeg",
   "ffprobe",
@@ -125,7 +125,7 @@ const hashes = {
   deno: "JIT disabled",
   files: {},
 };
-for (const name of ["video-downloader", "yt-dlp", "ffmpeg", "ffprobe", "deno"])
+for (const name of ["tubecutter", "yt-dlp", "ffmpeg", "ffprobe", "deno"])
   hashes.files[name] = createHash("sha256")
     .update(readFileSync(pathOf(name)))
     .digest("hex");

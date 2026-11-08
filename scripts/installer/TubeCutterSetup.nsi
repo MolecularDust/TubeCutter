@@ -33,7 +33,7 @@ SetCompressor /SOLID lzma
 !define MUI_ICON "${ICON}"
 !define MUI_UNICON "${ICON}"
 !define MUI_ABORTWARNING
-!define MUI_FINISHPAGE_RUN "$INSTDIR\video-downloader.exe"
+!define MUI_FINISHPAGE_RUN "$INSTDIR\tubecutter.exe"
 
 Var Mode
 Var RadioInstall
@@ -76,10 +76,10 @@ Function ModePage
   ${NSD_CreateLabel} 0 0 100% 24u "Choose how to set up TubeCutter on this computer."
   Pop $0
 
-  ${NSD_CreateRadioButton} 0 30u 100% 12u "Install normally: Start menu shortcut and an entry in Apps & features. No administrator rights needed."
+  ${NSD_CreateRadioButton} 0 26u 100% 26u "Install normally: Start menu shortcut and an entry in Apps & features. No administrator rights needed."
   Pop $RadioInstall
 
-  ${NSD_CreateRadioButton} 0 60u 100% 12u "Portable: copy the program into a folder you choose. Nothing is added to the Start menu or the registry."
+  ${NSD_CreateRadioButton} 0 62u 100% 26u "Portable: copy the program into a folder you choose. Nothing is added to the Start menu or the registry."
   Pop $RadioPortable
 
   ${If} $Mode == "portable"
@@ -115,11 +115,11 @@ Section "Install"
 
   ${If} $Mode == "install"
     WriteUninstaller "$INSTDIR\uninstall.exe"
-    CreateShortCut "$SMPROGRAMS\${APPNAME}.lnk" "$INSTDIR\video-downloader.exe"
+    CreateShortCut "$SMPROGRAMS\${APPNAME}.lnk" "$INSTDIR\tubecutter.exe"
     WriteRegStr HKCU "${UNINSTALL_KEY}" "DisplayName" "${APPNAME}"
     WriteRegStr HKCU "${UNINSTALL_KEY}" "DisplayVersion" "${VERSION}"
     WriteRegStr HKCU "${UNINSTALL_KEY}" "InstallLocation" "$INSTDIR"
-    WriteRegStr HKCU "${UNINSTALL_KEY}" "DisplayIcon" "$INSTDIR\video-downloader.exe"
+    WriteRegStr HKCU "${UNINSTALL_KEY}" "DisplayIcon" "$INSTDIR\tubecutter.exe"
     WriteRegStr HKCU "${UNINSTALL_KEY}" "UninstallString" '"$INSTDIR\uninstall.exe"'
     WriteRegDWORD HKCU "${UNINSTALL_KEY}" "NoModify" 1
     WriteRegDWORD HKCU "${UNINSTALL_KEY}" "NoRepair" 1
