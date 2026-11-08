@@ -13,6 +13,7 @@
     "package": "node scripts/package-macos.mjs",
     "install:tools:windows": "node scripts/install-tools-windows.mjs",
     "package:windows": "node scripts/package-windows.mjs",
+    "package:windows-installer": "node scripts/package-windows-installer.mjs",
     "prepare:sidecars": "node scripts/prepare-sidecars.mjs",
     "format": "prettier --write src scripts docs README.md",
     "package:dev": "npm run prepare:sidecars && node scripts/desktop.mjs build --debug --bundles app --config src-tauri/tauri.dev-bundle.conf.json && node scripts/embed-yt-dlp.mjs src-tauri/target/debug/bundle/macos/TubeCutter.app --reseal"
