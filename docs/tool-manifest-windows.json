@@ -1,0 +1,26 @@
+[
+  {
+    "name": "yt-dlp",
+    "target": "x86_64-pc-windows-msvc",
+    "sha256": "66674953fe251b89f4d08c5f0e35e0728679bd67ab3d7d05c0562af101dd3e7a",
+    "version": "2026.08.19"
+  },
+  {
+    "name": "deno",
+    "target": "x86_64-pc-windows-msvc",
+    "sha256": "e020f3e232bd16e33768dee528e5983349c962952051ced0a5d58ad42f5d9b33",
+    "version": "deno 2.9.7 (stable, release, x86_64-pc-windows-msvc)"
+  },
+  {
+    "name": "ffmpeg",
+    "target": "x86_64-pc-windows-msvc",
+    "sha256": "c5bfe9c1df61589b4545f8ab1c24924537db7fa657a91e45961f7394bf750888",
+    "version": "ffmpeg version N-128142-g28fda48e0b-20261028 Copyright (c) 2000-2026 the FFmpeg developers"
+  },
+  {
+    "name": "ffprobe",
+    "target": "x86_64-pc-windows-msvc",
+    "sha256": "869045529fa15fb759e4a67b872f5dd9c13631a673778d1d16e5df905c9e8c7c",
+    "version": "ffprobe version N-128142-g28fda48e0b-20261028 Copyright (c) 2007-2026 the FFmpeg developers"
+  }
+]

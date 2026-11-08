@@ -799,7 +799,16 @@ fn reveal(s: State<Backend>, id: String) -> Result<(), String> {
             .spawn()
             .map_err(|_| "Could not reveal file")?;
     }
-    #[cfg(not(target_os = "macos"))]
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        // Explorer needs the path quoted as one raw argument after /select,
+        std::process::Command::new("explorer.exe")
+            .raw_arg(format!("/select,\"{}\"", j.path))
+            .spawn()
+            .map_err(|_| "Could not reveal file")?;
+    }
+    #[cfg(not(any(target_os = "macos", windows)))]
     return Err("Reveal is not implemented for this platform".into());
     Ok(())
 }

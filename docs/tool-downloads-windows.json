@@ -1,0 +1,29 @@
+[
+  {
+    "name": "yt-dlp",
+    "url": "https://github.com/yt-dlp/yt-dlp/releases/download/2026.08.19/yt-dlp.exe",
+    "zip": false,
+    "sha256": "66674953fe251b89f4d08c5f0e35e0728679bd67ab3d7d05c0562af101dd3e7a"
+  },
+  {
+    "name": "deno",
+    "url": "https://github.com/denoland/deno/releases/download/v2.9.7/deno-x86_64-pc-windows-msvc.zip",
+    "zip": true,
+    "member": "deno.exe",
+    "sha256": "a0c3101b4158d1dfb7d6a78a7bf0f3de80c96bb423c152beec8beb22786f2238"
+  },
+  {
+    "name": "ffmpeg",
+    "url": "https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-10-28-19-47/ffmpeg-N-128142-g28fda48e0b-win64-gpl.zip",
+    "zip": true,
+    "member": "ffmpeg-N-128142-g28fda48e0b-win64-gpl/bin/ffmpeg.exe",
+    "sha256": "3b8088e8f0c6eb9cfc32fb7eddecd8ee8cb5657bc93bce876dc5c7a1580af736"
+  },
+  {
+    "name": "ffprobe",
+    "url": "https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-10-28-19-47/ffmpeg-N-128142-g28fda48e0b-win64-gpl.zip",
+    "zip": true,
+    "member": "ffmpeg-N-128142-g28fda48e0b-win64-gpl/bin/ffprobe.exe",
+    "sha256": "3b8088e8f0c6eb9cfc32fb7eddecd8ee8cb5657bc93bce876dc5c7a1580af736"
+  }
+]
