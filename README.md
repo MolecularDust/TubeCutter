@@ -102,3 +102,9 @@ CARGO_HOME="$PWD/.tools/cargo" RUSTUP_HOME="$PWD/.tools/rustup" .tools/cargo/bin
 Read [architecture and dependency notes](docs/DEPENDENCIES.md) and [verification status](docs/TEST_RESULTS.md) before relying on a feature. Downloads only support content you own or have permission to download.
 
 See [test results](docs/TEST_RESULTS.md) for what has actually been verified.
+
+## Support TubeCutter
+
+If TubeCutter makes your life easier, consider buying me a coffee. It's just a few dollars for you, but it means a lot to me.
+
+Behind every vibe-coded app there's a real human. Even in the AI era, development and testing take time and effort. AI makes the development cycle much faster, but it still can't pay my bills. Thank you.
