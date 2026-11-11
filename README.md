@@ -1,16 +1,38 @@
 # TubeCutter
 
-A native Tauri 2 + React + Rust desktop application for authorized YouTube downloads, embedded preview, section selection, and a managed download queue. macOS Apple Silicon is the current build target. See [test results](docs/TEST_RESULTS.md) for what has actually been verified.
+**Stop downloading whole videos. Grab only the moment you want.**
+
+TubeCutter is the fastest way to save exactly the part of a YouTube video you need. Paste a link, preview it, drag to mark your In and Out points, and TubeCutter cuts just that section into a clean file. Queue as many clips as you like, pause or cancel anytime, and keep the ones you love.
+
+Made for Windows and Mac. See [test results](docs/TEST_RESULTS.md) for what has actually been verified.
 
 <p align="center">
   <img src="docs/images/tubecutter-main.webp" alt="TubeCutter main window: paste a YouTube link, preview the video, choose a section, and add it to the download queue" width="420">
 </p>
 
-**Current release status:** the macOS Apple Silicon `.app` and `.dmg` are functional local evaluation builds. Signed-tool metadata/download tests and signature/image integrity checks pass. The user-approved library-validation exception applies only to yt-dlp; the main app retains validation and Deno runs with JIT disabled. See [signing details](docs/SIGNING_APPROVAL.md). The build is ad-hoc signed, not Developer ID signed or notarized.
+**Current release status:** the Windows x64 setup is published on the [v0.1.1 release](https://github.com/MolecularDust/TubeCutter/releases/tag/v0.1.1). It is not code-signed, so Windows SmartScreen may warn on first run. The macOS Apple Silicon `.app` and `.dmg` are functional local evaluation builds. Signed-tool metadata/download tests and signature/image integrity checks pass. The user-approved library-validation exception applies only to yt-dlp; the main app retains validation and Deno runs with JIT disabled. See [signing details](docs/SIGNING_APPROVAL.md). The build is ad-hoc signed, not Developer ID signed or notarized.
+
+## Download
+
+- **Windows:** download `TubeCutter-Setup_0.1.1_x64.exe` from the [latest release](https://github.com/MolecularDust/TubeCutter/releases/latest). Choose a regular install or a portable copy.
+- **Mac (Apple Silicon):** build from source using the macOS sections below.
+
+## Build for Windows (x64)
+
+Install Rust with the MSVC toolchain, Microsoft C++ Build Tools with Desktop development with C++, and WebView2. See the [Tauri prerequisites](https://tauri.app/start/prerequisites/).
+
+```powershell
+npm ci
+npm run install:tools:windows
+npm run package:windows
+npm run package:windows-installer
+```
+
+The setup file is written to `src-tauri/target/release/bundle/setup-choice`. See [working across computers](docs/CROSS_PLATFORM.md) for the Windows release notes.
 
 ## Run
 
-For cloning on Mac or Windows, moving changes between computers, and the remaining Windows release work, see [working across computers](docs/CROSS_PLATFORM.md).
+For cloning on Windows or Mac, moving changes between computers, and the remaining Windows release work, see [working across computers](docs/CROSS_PLATFORM.md).
 
 Requires Node.js 22.12+ and Xcode Command Line Tools for development. This workspace has project-local Rust under `.tools`; no shell profile was changed.
 
@@ -23,7 +45,7 @@ npm run desktop
 
 On a fresh checkout, install Rust using https://rustup.rs or install it locally with `CARGO_HOME="$PWD/.tools/cargo" RUSTUP_HOME="$PWD/.tools/rustup"` and `--no-modify-path`. The desktop script uses project-local Rust when present. Place trusted standalone yt-dlp, FFmpeg, FFprobe and Deno binaries in `.tools/bin`. Development also searches PATH and conventional Homebrew locations; packaged builds use only adjacent bundled executables.
 
-## Local development app bundle
+## macOS development app bundle
 
 ```sh
 npm run package:dev
@@ -31,7 +53,7 @@ npm run package:dev
 
 This produces a local development `.app` at `src-tauri/target/debug/bundle/macos/TubeCutter.app`. It uses the development signing posture, not the hardened distribution configuration. It is suitable for local evaluation, not public distribution.
 
-## Release build
+## macOS release build
 
 ```sh
 npm run package
