@@ -11,6 +11,7 @@
     "tauri": "tauri",
     "desktop": "node scripts/desktop.mjs dev",
     "package": "node scripts/package-macos.mjs",
+    "package:installer": "bash tools/installer/make_installer.sh",
     "install:tools:windows": "node scripts/install-tools-windows.mjs",
     "package:windows": "node scripts/package-windows.mjs",
     "package:windows-installer": "node scripts/package-windows-installer.mjs",
