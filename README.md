@@ -12,8 +12,8 @@ TubeCutter is the fastest way to save exactly the part of a YouTube video you ne
 
 ## Download
 
-- **Windows:** download `TubeCutter-Setup_0.1.1_x64.exe` from the [latest release](https://github.com/MolecularDust/TubeCutter/releases/latest). Choose a regular install or a portable copy.
-- **Mac (Apple Silicon):** build from source using the macOS sections below.
+- **Windows:** [Download the latest release](https://github.com/MolecularDust/TubeCutter/releases/latest). Choose a regular install or a portable copy.
+- **macOS:** [Download the latest release](https://github.com/MolecularDust/TubeCutter/releases/latest).
 
 ## Build for Windows (x64)
 
