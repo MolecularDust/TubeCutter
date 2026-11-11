@@ -15,6 +15,18 @@ TubeCutter is the fastest way to save exactly the part of a YouTube video you ne
 - **Windows:** [Download the latest release](https://github.com/MolecularDust/TubeCutter/releases/latest). Choose a regular install or a portable copy.
 - **macOS:** [Download the latest release](https://github.com/MolecularDust/TubeCutter/releases/latest).
 
+## Set up YouTube access
+
+1. Install TubeCutter and open **Account & Settings**.
+2. In the **Authentication** menu, choose **App’s YouTube session**.
+3. Click **Sign in to Google** and complete the sign-in.
+
+You're ready to use TubeCutter.
+
+To use a browser you already have signed in to instead, choose Chrome, Firefox, or Opera under **Authentication**. On Windows, close that browser before you start. Only use your own account. Do not import or share anyone else's cookies.
+
+You can also keep **Anonymous**, but Google's anti-bot checks are stricter for anonymous access.
+
 ## For Developers
 
 ### Build for Windows (x64)
