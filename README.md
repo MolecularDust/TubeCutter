@@ -15,7 +15,9 @@ TubeCutter is the fastest way to save exactly the part of a YouTube video you ne
 - **Windows:** [Download the latest release](https://github.com/MolecularDust/TubeCutter/releases/latest). Choose a regular install or a portable copy.
 - **macOS:** [Download the latest release](https://github.com/MolecularDust/TubeCutter/releases/latest).
 
-## Build for Windows (x64)
+## For Developers
+
+### Build for Windows (x64)
 
 Install Rust with the MSVC toolchain, Microsoft C++ Build Tools with Desktop development with C++, and WebView2. See the [Tauri prerequisites](https://tauri.app/start/prerequisites/).
 
