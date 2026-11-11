@@ -18,7 +18,7 @@ run(process.execPath, [
   "src-tauri/tauri.bundle.conf.json",
 ]);
 const installer = resolve(
-  "src-tauri/target/release/bundle/nsis/TubeCutter_0.1.0_x64-setup.exe",
+  "src-tauri/target/release/bundle/nsis/TubeCutter_0.1.1_x64-setup.exe",
 );
 if (!existsSync(installer)) throw Error(`Installer was not created: ${installer}`);
 const hash = createHash("sha256").update(readFileSync(installer)).digest("hex");

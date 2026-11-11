@@ -102,7 +102,7 @@ run("codesign", [
   join(staging, "TubeCutter.app"),
 ]);
 symlinkSync("/Applications", join(staging, "Applications"));
-const image = join(temporary, "TubeCutter_0.1.0_aarch64.dmg");
+const image = join(temporary, "TubeCutter_0.1.1_aarch64.dmg");
 run("hdiutil", [
   "create",
   "-volname",
@@ -116,7 +116,7 @@ run("hdiutil", [
 run("hdiutil", ["verify", image]);
 const destination = resolve("src-tauri/target/release/bundle/dmg");
 mkdirSync(destination, { recursive: true });
-const finalImage = join(destination, "TubeCutter_0.1.0_aarch64.dmg");
+const finalImage = join(destination, "TubeCutter_0.1.1_aarch64.dmg");
 renameSync(image, finalImage);
 const hashes = {
   target: "aarch64-apple-darwin",
@@ -129,7 +129,7 @@ for (const name of ["tubecutter", "yt-dlp", "ffmpeg", "ffprobe", "deno"])
   hashes.files[name] = createHash("sha256")
     .update(readFileSync(pathOf(name)))
     .digest("hex");
-hashes.files["TubeCutter_0.1.0_aarch64.dmg"] = createHash("sha256")
+hashes.files["TubeCutter_0.1.1_aarch64.dmg"] = createHash("sha256")
   .update(readFileSync(finalImage))
   .digest("hex");
 writeFileSync(

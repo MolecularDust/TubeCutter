@@ -10,7 +10,7 @@ import { join, resolve } from "node:path";
 if (process.platform !== "win32" || process.arch !== "x64")
   throw Error("This installer workflow targets Windows x64.");
 const target = "x86_64-pc-windows-msvc";
-const version = "0.1.0";
+const version = "0.1.1";
 const makensis = join(
   process.env.LOCALAPPDATA ?? "",
   "tauri",

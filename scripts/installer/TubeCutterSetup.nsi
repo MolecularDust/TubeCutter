@@ -16,7 +16,7 @@ Unicode true
   !error "Pass /DICON=<icon.ico> to makensis"
 !endif
 !ifndef VERSION
-  !define VERSION "0.1.0"
+  !define VERSION "0.1.1"
 !endif
 
 !define APPNAME "TubeCutter"

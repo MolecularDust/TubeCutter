@@ -45,7 +45,7 @@ npm run desktop
 
 `install:tools:windows` downloads the pinned yt-dlp, Deno, FFmpeg, and FFprobe builds listed in `docs/tool-downloads-windows.json`, verifies each against its SHA256, and stages them in `.tools/bin` and `src-tauri/binaries`. Its results are recorded in `docs/tool-manifest-windows.json`.
 
-`npm run package:windows` produces `src-tauri/target/release/bundle/nsis/TubeCutter_0.1.0_x64-setup.exe`. The installer is not code-signed. Windows SmartScreen may warn on first run until signing is decided.
+`npm run package:windows` produces `src-tauri/target/release/bundle/nsis/TubeCutter_0.1.1_x64-setup.exe`. The installer is not code-signed. Windows SmartScreen may warn on first run until signing is decided.
 
 Windows pause, resume, and cancel act on the whole process tree, because the yt-dlp executable starts a child process. Process control has a unit test on Windows. The complete download, cut, and cancel flow in the installed app still needs manual testing, including preview, clipboard, folder selection, cancellation cleanup, and queue clearing.
 
