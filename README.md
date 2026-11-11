@@ -2,7 +2,7 @@
 
 **Stop downloading whole videos. Grab only the moment you want.**
 
-TubeCutter is the fastest way to save exactly the part of a YouTube video you need. Paste a link, preview it, drag to mark your In and Out points, and TubeCutter cuts just that section into a clean file. Queue as many clips as you like, pause or cancel anytime, and keep the ones you love. Made for Windows and Mac. See [test results](docs/TEST_RESULTS.md) for what has actually been verified.
+TubeCutter is the fastest way to save exactly the part of a YouTube video you need. Paste a link, preview it, drag to mark your In and Out points, and TubeCutter cuts just that section into a clean file. Queue as many clips as you like, pause or cancel anytime, and keep the ones you love. Made for Windows and Mac.
 
 <p align="center">
   <img src="docs/images/tubecutter-main.webp" alt="TubeCutter main window: paste a YouTube link, preview the video, choose a section, and add it to the download queue" width="420">
@@ -86,3 +86,5 @@ CARGO_HOME="$PWD/.tools/cargo" RUSTUP_HOME="$PWD/.tools/rustup" .tools/cargo/bin
 ```
 
 Read [architecture and dependency notes](docs/DEPENDENCIES.md) and [verification status](docs/TEST_RESULTS.md) before relying on a feature. Downloads only support content you own or have permission to download.
+
+See [test results](docs/TEST_RESULTS.md) for what has actually been verified.
