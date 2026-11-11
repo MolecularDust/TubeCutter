@@ -2,6 +2,10 @@
 
 A native Tauri 2 + React + Rust desktop application for authorized YouTube downloads, embedded preview, section selection, and a managed download queue. macOS Apple Silicon is the current build target. See [test results](docs/TEST_RESULTS.md) for what has actually been verified.
 
+<p align="center">
+  <img src="docs/images/tubecutter-main.webp" alt="TubeCutter main window: paste a YouTube link, preview the video, choose a section, and add it to the download queue" width="420">
+</p>
+
 **Current release status:** the macOS Apple Silicon `.app` and `.dmg` are functional local evaluation builds. Signed-tool metadata/download tests and signature/image integrity checks pass. The user-approved library-validation exception applies only to yt-dlp; the main app retains validation and Deno runs with JIT disabled. See [signing details](docs/SIGNING_APPROVAL.md). The build is ad-hoc signed, not Developer ID signed or notarized.
 
 ## Run
