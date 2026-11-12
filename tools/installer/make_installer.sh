@@ -69,7 +69,7 @@ productbuild --distribution "$WORK/distribution.xml" --resources "$WORK/resource
 # --- The disk image around it ----------------------------------------------------------------------------------------
 swiftc -O "$HERE/render_dmg_background.swift" -o "$WORK/render_bg" 2>/dev/null
 swiftc -O "$HERE/render_dmg_icons.swift" -o "$WORK/render_icons" 2>/dev/null
-swiftc -O "$HERE/set_package_icon.swift" -o "$WORK/set_package_icon" 2>/dev/null
+swiftc -O "$HERE/render_dmg_package_icon.swift" -o "$WORK/render_pkg_icon" 2>/dev/null
 ICON_SIZE=112
 JSON="$HERE/pkg/text/en.json"
 text() { python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))[sys.argv[2]])' "$1" "$2"; }
@@ -101,8 +101,8 @@ on run argv
 end run
 OSA
 "$WORK/render_icons" "$MOUNT/$SHORTCUT" "$ICON_SIZE" "$TILE"
-# The package picture: the newer macOS package icon (tools/installer/assets/package-icon.png).
-"$WORK/set_package_icon" "$MOUNT/$PKG" "$HERE/assets/package-icon.png"
+# The package picture: an open white box with a blue cube (drawn in render_dmg_package_icon.swift).
+"$WORK/render_pkg_icon" "$MOUNT/$PKG" 112
 
 # The window is 660 points wide and H tall inside, like the picture (the title bar adds 28); icon positions are their
 # centres, from the top left.
