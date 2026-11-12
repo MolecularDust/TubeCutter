@@ -27,11 +27,13 @@ To use a browser you already have signed in to instead, choose Chrome, Firefox, 
 
 You can also keep **Anonymous**, but Google's anti-bot checks are stricter for anonymous access.
 
+<!--
 ## Support TubeCutter
 
 If TubeCutter makes your life easier, consider buying me a coffee. It's just a few dollars for you, but it means a lot to me and it helps to keep the app free.
 
 Behind every vibe-coded app there's a real human. Even in the AI era, development and testing take time and effort. AI makes the development cycle much faster, but it still can't pay my bills. Thank you.
+-->
 
 ## For Developers
 
