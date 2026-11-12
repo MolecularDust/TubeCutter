@@ -42,7 +42,7 @@ cpSync(resolve("LICENSES"), join(payload, "LICENSES"), { recursive: true });
 copyFileSync(resolve("docs/DEPENDENCIES.md"), join(payload, "DEPENDENCIES.md"));
 const outDir = resolve("src-tauri/target/release/bundle/setup-choice");
 mkdirSync(outDir, { recursive: true });
-const outFile = join(outDir, `TubeCutter-Setup_${version}_x64.exe`);
+const outFile = join(outDir, `TubeCutter-Setup_${version}_Windows_x64.exe`);
 const r = spawnSync(
   makensis,
   [
