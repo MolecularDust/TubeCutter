@@ -129,5 +129,7 @@
   "Use HH:MM:SS, optionally with milliseconds.": "HH:MM:SS の形式で入力してください（ミリ秒は省略可）。",
   "Minutes and seconds must be below 60.": "分と秒は60未満にしてください。",
   "Length must be positive and fit within the video.": "長さは正の値で、動画の範囲内にしてください。",
-  "Length must be positive and fit within the video and padding.": "長さは正の値で、動画と余白の範囲内にしてください。"
+  "Length must be positive and fit within the video and padding.": "長さは正の値で、動画と余白の範囲内にしてください。",
+  "Show in Explorer": "エクスプローラーで表示",
+  "Selecting a browser authorizes yt-dlp to read its cookies when you analyze or download. Close that browser first. Cookies are never printed or copied into app settings.": "ブラウザを選ぶと、解析やダウンロード時に yt-dlp がそのブラウザの Cookie を読み取ります。先にそのブラウザを閉じてください。Cookie が表示されたりアプリの設定にコピーされたりすることはありません。"
 }

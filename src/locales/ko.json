@@ -129,5 +129,7 @@
   "Use HH:MM:SS, optionally with milliseconds.": "HH:MM:SS 형식을 사용하세요. 밀리초는 선택 사항입니다.",
   "Minutes and seconds must be below 60.": "분과 초는 60 미만이어야 합니다.",
   "Length must be positive and fit within the video.": "길이는 양수여야 하며 동영상 안에 들어와야 합니다.",
-  "Length must be positive and fit within the video and padding.": "길이는 양수여야 하며 동영상과 여유 안에 들어와야 합니다."
+  "Length must be positive and fit within the video and padding.": "길이는 양수여야 하며 동영상과 여유 안에 들어와야 합니다.",
+  "Show in Explorer": "탐색기에서 보기",
+  "Selecting a browser authorizes yt-dlp to read its cookies when you analyze or download. Close that browser first. Cookies are never printed or copied into app settings.": "브라우저를 선택하면 분석하거나 다운로드할 때 yt-dlp가 해당 브라우저의 쿠키를 읽도록 허용됩니다. 먼저 그 브라우저를 닫으세요. 쿠키는 출력되거나 앱 설정에 복사되지 않습니다."
 }

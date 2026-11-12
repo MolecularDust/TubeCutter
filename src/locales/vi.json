@@ -129,5 +129,7 @@
   "Use HH:MM:SS, optionally with milliseconds.": "Dùng HH:MM:SS, có thể kèm mili giây.",
   "Minutes and seconds must be below 60.": "Phút và giây phải nhỏ hơn 60.",
   "Length must be positive and fit within the video.": "Độ dài phải dương và nằm trong video.",
-  "Length must be positive and fit within the video and padding.": "Độ dài phải dương và nằm trong video cùng phần đệm."
+  "Length must be positive and fit within the video and padding.": "Độ dài phải dương và nằm trong video cùng phần đệm.",
+  "Show in Explorer": "Hiển thị trong File Explorer",
+  "Selecting a browser authorizes yt-dlp to read its cookies when you analyze or download. Close that browser first. Cookies are never printed or copied into app settings.": "Chọn trình duyệt cho phép yt-dlp đọc cookie của trình duyệt đó khi phân tích hoặc tải xuống. Hãy đóng trình duyệt đó trước. Cookie không bao giờ được hiển thị hoặc sao chép vào cài đặt ứng dụng."
 }

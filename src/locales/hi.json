@@ -129,5 +129,7 @@
   "Use HH:MM:SS, optionally with milliseconds.": "HH:MM:SS इस्तेमाल करें; मिलीसेकंड वैकल्पिक हैं।",
   "Minutes and seconds must be below 60.": "मिनट और सेकंड 60 से कम होने चाहिए।",
   "Length must be positive and fit within the video.": "लंबाई धनात्मक होनी चाहिए और वीडियो के भीतर आनी चाहिए।",
-  "Length must be positive and fit within the video and padding.": "लंबाई धनात्मक होनी चाहिए और वीडियो व पैडिंग के भीतर आनी चाहिए।"
+  "Length must be positive and fit within the video and padding.": "लंबाई धनात्मक होनी चाहिए और वीडियो व पैडिंग के भीतर आनी चाहिए।",
+  "Show in Explorer": "एक्सप्लोरर में दिखाएँ",
+  "Selecting a browser authorizes yt-dlp to read its cookies when you analyze or download. Close that browser first. Cookies are never printed or copied into app settings.": "कोई ब्राउज़र चुनने पर विश्लेषण या डाउनलोड के समय yt-dlp उसकी कुकीज़ पढ़ सकता है। पहले वह ब्राउज़र बंद करें। कुकीज़ कभी प्रदर्शित नहीं होतीं और ऐप सेटिंग्स में कॉपी नहीं होतीं।"
 }

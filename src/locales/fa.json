@@ -129,5 +129,7 @@
   "Use HH:MM:SS, optionally with milliseconds.": "از قالب HH:MM:SS استفاده کنید؛ میلی‌ثانیه اختیاری است.",
   "Minutes and seconds must be below 60.": "دقیقه و ثانیه باید کمتر از ۶۰ باشند.",
   "Length must be positive and fit within the video.": "مدت باید مثبت باشد و در ویدیو جا شود.",
-  "Length must be positive and fit within the video and padding.": "مدت باید مثبت باشد و در ویدیو و حاشیه جا شود."
+  "Length must be positive and fit within the video and padding.": "مدت باید مثبت باشد و در ویدیو و حاشیه جا شود.",
+  "Show in Explorer": "نمایش در File Explorer",
+  "Selecting a browser authorizes yt-dlp to read its cookies when you analyze or download. Close that browser first. Cookies are never printed or copied into app settings.": "انتخاب مرورگر به yt-dlp اجازه می‌دهد هنگام تحلیل یا دانلود کوکی‌های آن را بخواند. ابتدا آن مرورگر را ببندید. کوکی‌ها هرگز چاپ یا در تنظیمات برنامه کپی نمی‌شوند."
 }

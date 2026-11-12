@@ -129,5 +129,7 @@
   "Use HH:MM:SS, optionally with milliseconds.": "استخدم الصيغة HH:MM:SS، مع أجزاء اختيارية من الثانية.",
   "Minutes and seconds must be below 60.": "يجب أن تكون الدقائق والثواني أقل من 60.",
   "Length must be positive and fit within the video.": "يجب أن تكون المدة موجبة وتقع ضمن الفيديو.",
-  "Length must be positive and fit within the video and padding.": "يجب أن تكون المدة موجبة وتقع ضمن الفيديو والهامش."
+  "Length must be positive and fit within the video and padding.": "يجب أن تكون المدة موجبة وتقع ضمن الفيديو والهامش.",
+  "Show in Explorer": "إظهار في مستكشف الملفات",
+  "Selecting a browser authorizes yt-dlp to read its cookies when you analyze or download. Close that browser first. Cookies are never printed or copied into app settings.": "اختيار متصفح يمنح yt-dlp الإذن بقراءة ملفات تعريف الارتباط الخاصة به عند التحليل أو التنزيل. أغلق هذا المتصفح أولاً. لا تُعرض ملفات تعريف الارتباط ولا تُنسخ إلى إعدادات التطبيق أبداً."
 }

@@ -129,5 +129,7 @@
   "Use HH:MM:SS, optionally with milliseconds.": "HH:MM:SS biçimini kullanın; milisaniye isteğe bağlıdır.",
   "Minutes and seconds must be below 60.": "Dakika ve saniye 60’ın altında olmalıdır.",
   "Length must be positive and fit within the video.": "Uzunluk pozitif olmalı ve videoya sığmalıdır.",
-  "Length must be positive and fit within the video and padding.": "Uzunluk pozitif olmalı ve videoya ve paya sığmalıdır."
+  "Length must be positive and fit within the video and padding.": "Uzunluk pozitif olmalı ve videoya ve paya sığmalıdır.",
+  "Show in Explorer": "Gezgin'de göster",
+  "Selecting a browser authorizes yt-dlp to read its cookies when you analyze or download. Close that browser first. Cookies are never printed or copied into app settings.": "Bir tarayıcı seçmek, analiz veya indirme sırasında yt-dlp'nin o tarayıcının çerezlerini okumasına izin verir. Önce o tarayıcıyı kapatın. Çerezler hiçbir zaman gösterilmez veya uygulama ayarlarına kopyalanmaz."
 }

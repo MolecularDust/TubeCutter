@@ -129,5 +129,7 @@
   "Use HH:MM:SS, optionally with milliseconds.": "请使用 HH:MM:SS 格式，毫秒可选。",
   "Minutes and seconds must be below 60.": "分钟和秒必须小于 60。",
   "Length must be positive and fit within the video.": "时长必须为正数，并在视频范围内。",
-  "Length must be positive and fit within the video and padding.": "时长必须为正数，并在视频和余量范围内。"
+  "Length must be positive and fit within the video and padding.": "时长必须为正数，并在视频和余量范围内。",
+  "Show in Explorer": "在资源管理器中显示",
+  "Selecting a browser authorizes yt-dlp to read its cookies when you analyze or download. Close that browser first. Cookies are never printed or copied into app settings.": "选择浏览器后，yt-dlp 在分析或下载时即可读取该浏览器的 Cookie。请先关闭该浏览器。Cookie 不会被打印，也不会复制到应用设置中。"
 }

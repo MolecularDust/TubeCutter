@@ -129,5 +129,7 @@
   "Use HH:MM:SS, optionally with milliseconds.": "ใช้รูปแบบ HH:MM:SS โดยมีมิลลิวินาทีหรือไม่ก็ได้",
   "Minutes and seconds must be below 60.": "นาทีและวินาทีต้องน้อยกว่า 60",
   "Length must be positive and fit within the video.": "ความยาวต้องเป็นค่าบวกและอยู่ในวิดีโอ",
-  "Length must be positive and fit within the video and padding.": "ความยาวต้องเป็นค่าบวกและอยู่ในวิดีโอพร้อมส่วนเผื่อ"
+  "Length must be positive and fit within the video and padding.": "ความยาวต้องเป็นค่าบวกและอยู่ในวิดีโอพร้อมส่วนเผื่อ",
+  "Show in Explorer": "แสดงใน File Explorer",
+  "Selecting a browser authorizes yt-dlp to read its cookies when you analyze or download. Close that browser first. Cookies are never printed or copied into app settings.": "การเลือกเบราว์เซอร์จะอนุญาตให้ yt-dlp อ่านคุกกี้ของเบราว์เซอร์นั้นเมื่อวิเคราะห์หรือดาวน์โหลด โปรดปิดเบราว์เซอร์นั้นก่อน คุกกี้จะไม่ถูกแสดงหรือคัดลอกไปยังการตั้งค่าแอป"
 }

@@ -129,5 +129,7 @@
   "Use HH:MM:SS, optionally with milliseconds.": "Utilisez HH:MM:SS, avec des millisecondes facultatives.",
   "Minutes and seconds must be below 60.": "Les minutes et les secondes doivent être inférieures à 60.",
   "Length must be positive and fit within the video.": "La durée doit être positive et tenir dans la vidéo.",
-  "Length must be positive and fit within the video and padding.": "La durée doit être positive et tenir dans la vidéo et la marge."
+  "Length must be positive and fit within the video and padding.": "La durée doit être positive et tenir dans la vidéo et la marge.",
+  "Show in Explorer": "Afficher dans l’Explorateur",
+  "Selecting a browser authorizes yt-dlp to read its cookies when you analyze or download. Close that browser first. Cookies are never printed or copied into app settings.": "Choisir un navigateur autorise yt-dlp à lire ses cookies lors de l’analyse ou du téléchargement. Fermez d’abord ce navigateur. Les cookies ne sont jamais affichés ni copiés dans les réglages de l’application."
 }

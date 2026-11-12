@@ -129,5 +129,7 @@
   "Use HH:MM:SS, optionally with milliseconds.": "Gamitin ang HH:MM:SS, na may opsyonal na millisecond.",
   "Minutes and seconds must be below 60.": "Dapat mas mababa sa 60 ang minuto at segundo.",
   "Length must be positive and fit within the video.": "Dapat positibo ang haba at magkasya sa video.",
-  "Length must be positive and fit within the video and padding.": "Dapat positibo ang haba at magkasya sa video at padding."
+  "Length must be positive and fit within the video and padding.": "Dapat positibo ang haba at magkasya sa video at padding.",
+  "Show in Explorer": "Ipakita sa Explorer",
+  "Selecting a browser authorizes yt-dlp to read its cookies when you analyze or download. Close that browser first. Cookies are never printed or copied into app settings.": "Ang pagpili ng browser ay nagbibigay-daan sa yt-dlp na basahin ang cookies nito kapag nag-a-analyze o nagda-download. Isara muna ang browser na iyon. Hindi kailanman ipinapakita o kinokopya sa mga setting ng app ang cookies."
 }

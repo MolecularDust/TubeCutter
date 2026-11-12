@@ -129,5 +129,7 @@
   "Use HH:MM:SS, optionally with milliseconds.": "Gunakan HH:MM:SS, dengan milidetik opsional.",
   "Minutes and seconds must be below 60.": "Menit dan detik harus di bawah 60.",
   "Length must be positive and fit within the video.": "Durasi harus positif dan muat dalam video.",
-  "Length must be positive and fit within the video and padding.": "Durasi harus positif dan muat dalam video dan bantalan."
+  "Length must be positive and fit within the video and padding.": "Durasi harus positif dan muat dalam video dan bantalan.",
+  "Show in Explorer": "Tampilkan di Explorer",
+  "Selecting a browser authorizes yt-dlp to read its cookies when you analyze or download. Close that browser first. Cookies are never printed or copied into app settings.": "Memilih browser memberi izin yt-dlp membaca cookie-nya saat menganalisis atau mengunduh. Tutup browser itu terlebih dahulu. Cookie tidak pernah ditampilkan atau disalin ke pengaturan aplikasi."
 }

@@ -129,5 +129,7 @@
   "Use HH:MM:SS, optionally with milliseconds.": "HH:MM:SS ఉపయోగించండి, ఐచ్ఛికంగా మిల్లీసెకన్లతో.",
   "Minutes and seconds must be below 60.": "నిమిషాలు, సెకన్లు 60 కంటే తక్కువగా ఉండాలి.",
   "Length must be positive and fit within the video.": "నిడివి ధనాత్మకంగా ఉండాలి, వీడియోలో ఇమడాలి.",
-  "Length must be positive and fit within the video and padding.": "నిడివి ధనాత్మకంగా ఉండాలి, వీడియో మరియు ప్యాడింగ్‌లో ఇమడాలి."
+  "Length must be positive and fit within the video and padding.": "నిడివి ధనాత్మకంగా ఉండాలి, వీడియో మరియు ప్యాడింగ్‌లో ఇమడాలి.",
+  "Show in Explorer": "ఎక్స్‌ప్లోరర్‌లో చూపించు",
+  "Selecting a browser authorizes yt-dlp to read its cookies when you analyze or download. Close that browser first. Cookies are never printed or copied into app settings.": "బ్రౌజర్‌ను ఎంచుకుంటే విశ్లేషించేటప్పుడు లేదా డౌన్‌లోడ్ చేసేటప్పుడు yt-dlp ఆ బ్రౌజర్ కుకీలను చదవగలదు. ముందుగా ఆ బ్రౌజర్‌ను మూసివేయండి. కుకీలు ఎప్పుడూ ముద్రించబడవు లేదా యాప్ సెట్టింగ్‌లకు కాపీ చేయబడవు."
 }

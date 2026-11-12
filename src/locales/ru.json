@@ -129,5 +129,7 @@
   "Use HH:MM:SS, optionally with milliseconds.": "Используйте формат ЧЧ:ММ:СС, при необходимости с миллисекундами.",
   "Minutes and seconds must be below 60.": "Минуты и секунды должны быть меньше 60.",
   "Length must be positive and fit within the video.": "Длина должна быть положительной и укладываться в видео.",
-  "Length must be positive and fit within the video and padding.": "Длина должна быть положительной и укладываться в видео с запасом."
+  "Length must be positive and fit within the video and padding.": "Длина должна быть положительной и укладываться в видео с запасом.",
+  "Show in Explorer": "Показать в Проводнике",
+  "Selecting a browser authorizes yt-dlp to read its cookies when you analyze or download. Close that browser first. Cookies are never printed or copied into app settings.": "Выбор браузера разрешает yt-dlp читать его cookie при анализе или загрузке. Сначала закройте этот браузер. Cookie никогда не выводятся и не копируются в настройки приложения."
 }

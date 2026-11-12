@@ -1007,7 +1007,7 @@ function App() {
                     <button
                       onClick={() => act(() => invoke("reveal", { id: j.id }))}
                     >
-                      {t("Reveal in Finder")}
+                      {isWindows ? t("Show in Explorer") : t("Reveal in Finder")}
                     </button>
                   ) : j.state === "failed" ? (
                     <button
@@ -1137,16 +1137,22 @@ function App() {
                 <option value="opera">Opera</option>
                 <option value="chrome">Chrome</option>
                 <option value="firefox">Firefox</option>
-                <option value="safari">
-                  {t("Safari (may require Full Disk Access)")}
-                </option>
+                {!isWindows && (
+                  <option value="safari">
+                    {t("Safari (may require Full Disk Access)")}
+                  </option>
+                )}
                 <option value="file">{t("Import Netscape cookies…")}</option>
               </select>
             </Field>
             <p className="notice">
-              {t(
-                "Selecting a browser authorizes yt-dlp to read its cookies when you analyze or download. macOS may request Keychain or cookie-store access. Cookies are never printed or copied into app settings.",
-              )}
+              {isWindows
+                ? t(
+                    "Selecting a browser authorizes yt-dlp to read its cookies when you analyze or download. Close that browser first. Cookies are never printed or copied into app settings.",
+                  )
+                : t(
+                    "Selecting a browser authorizes yt-dlp to read its cookies when you analyze or download. macOS may request Keychain or cookie-store access. Cookies are never printed or copied into app settings.",
+                  )}
             </p>
             <Field label={t("Appearance")}>
               <select
