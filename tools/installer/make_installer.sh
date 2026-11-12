@@ -101,8 +101,8 @@ on run argv
 end run
 OSA
 "$WORK/render_icons" "$MOUNT/$SHORTCUT" "$ICON_SIZE" "$TILE"
-# The package's picture: the same blue tile as the shortcut, with a box and the package's name.
-"$WORK/render_pkg_icon" "$MOUNT/$PKG" 112 "$(text "$JSON" d_pkg)"
+# The package picture: an open white box with a blue cube (drawn in render_dmg_package_icon.swift).
+"$WORK/render_pkg_icon" "$MOUNT/$PKG" 112
 
 # The window is 660 points wide and H tall inside, like the picture (the title bar adds 28); icon positions are their
 # centres, from the top left.
