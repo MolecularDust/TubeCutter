@@ -334,6 +334,23 @@ function App() {
     else if (kind === "out") setEnd(Math.max(position, start + 0.01));
     else seek(position);
   };
+  const languageSelect = (
+    <select
+      aria-label={t("Language")}
+      value={chosen}
+      onChange={(e) => {
+        chooseLanguage(e.target.value);
+        setLanguageVersion((n) => n + 1);
+      }}
+    >
+      <option value="">{t("Same as the system")}</option>
+      {languageChoices().map(({ code, name }) => (
+        <option key={code} value={code}>
+          {name}
+        </option>
+      ))}
+    </select>
+  );
   return (
     <div className="app">
       <header>
@@ -344,9 +361,12 @@ function App() {
             <small>{t("Your videos. Your way.")}</small>
           </div>
         </div>
-        <button onClick={() => setShowSettings(true)}>
-          ◎ <span>{t("Account & Settings")}</span>
-        </button>
+        <div className="header-actions">
+          {languageSelect}
+          <button onClick={() => setShowSettings(true)}>
+            ◎ <span>{t("Account & Settings")}</span>
+          </button>
+        </div>
       </header>
       <main>
         <div className="intro">
@@ -1140,22 +1160,7 @@ function App() {
                 <option value="dark">{t("Dark")}</option>
               </select>
             </Field>
-            <Field label={t("Language")}>
-              <select
-                value={chosen}
-                onChange={(e) => {
-                  chooseLanguage(e.target.value);
-                  setLanguageVersion((n) => n + 1);
-                }}
-              >
-                <option value="">{t("Same as the system")}</option>
-                {languageChoices().map(({ code, name }) => (
-                  <option key={code} value={code}>
-                    {name}
-                  </option>
-                ))}
-              </select>
-            </Field>
+            <Field label={t("Language")}>{languageSelect}</Field>
           </section>
         </div>
       )}

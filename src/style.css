@@ -994,3 +994,20 @@ div.check input {
 :root[dir="rtl"] .download-filename input {
   text-align: right;
 }
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.header-actions select {
+  max-width: 190px;
+  padding: 9px 10px;
+  font-size: 12px;
+  font-weight: 550;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  color: inherit;
+  cursor: pointer;
+}
