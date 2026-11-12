@@ -362,7 +362,6 @@ function App() {
           </div>
         </div>
         <div className="header-actions">
-          {languageSelect}
           <button onClick={() => setShowSettings(true)}>
             ◎ <span>{t("Account & Settings")}</span>
           </button>
