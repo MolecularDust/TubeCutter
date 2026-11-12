@@ -980,3 +980,17 @@ div.check input {
   gap: 12px;
   margin: 12px 0 16px;
 }
+
+/* Right-to-left languages (Arabic, Persian): the layout mirrors, but the
+   timeline and the numbers on it keep running left to right like a clock. */
+:root[dir="rtl"] .timeline,
+:root[dir="rtl"] .timeline-labels,
+:root[dir="rtl"] .time-input input,
+:root[dir="rtl"] .url-row input,
+:root[dir="rtl"] .download-filename input {
+  direction: ltr;
+}
+:root[dir="rtl"] .url-row input,
+:root[dir="rtl"] .download-filename input {
+  text-align: right;
+}

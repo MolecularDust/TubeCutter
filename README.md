@@ -93,9 +93,11 @@ Binaries are excluded from Git. The installed versions/hashes are recorded in `d
 6. Download settings starts expanded; click its heading to collapse or reopen it. Select a container, actual source resolution, codec, audio, subtitles and mode; add to the queue.
 7. Pause/resume or cancel active downloads. Retry failures and reveal completed files in Finder. Clear Finished removes completed, canceled, and failed rows while preserving active jobs and saved files.
 
-Account & Settings defaults to anonymous. **Sign in to Google** / **Connect YouTube** open Google's own pages in an app window whose login persists in the app's webview storage; choosing *App's YouTube session* then gives yt-dlp a private, per-job cookie snapshot (mode 0600, deleted afterward and swept at startup) with no browser or Keychain access.
+Account & Settings defaults to anonymous. **Sign in to Google** / **Connect YouTube** open Google's own pages in an app window whose login persists in the app's webview storage; choosing _App's YouTube session_ then gives yt-dlp a private, per-job cookie snapshot (mode 0600, deleted afterward and swept at startup) with no browser or Keychain access.
 
 Speed: yt-dlp ships unpacked (starts in ~0.2 s instead of re-extracting itself each run), Analyze's metadata is reused by the matching download for up to 20 minutes (with a fresh-extraction retry if it fails), and yt-dlp uses a private cache folder. Set `TUBECUTTER_NO_CACHE=1` to compare without the cache. Selecting a browser explicitly authorizes subsequent access to that browser's cookies and may trigger OS permissions. Do not import or share anyone else's cookies. Only paths/preferences are stored in the app config directory. Authentication is optional.
+
+**Language** (Account & Settings → Language): the system's language or one of 20 — Arabic, Bengali, Chinese (Simplified), English, Filipino, French, German, Hindi, Indonesian, Italian, Japanese, Korean, Persian, Portuguese (Brazil), Russian, Spanish, Telugu, Thai, Turkish, Vietnamese — listed alphabetically in the current language, applied at once. Arabic and Persian lay out right to left. The English in the code is the text to translate: `t("…")` in `src/main.tsx` looks it up in `src/locales/<code>.json` (`{0}`, `{1}` are filled in). After adding or changing a text, run `npm run i18n:check`: it lists every text without a translation, translations nobody uses any more, and translations whose placeholders don't match. Messages from the Rust side (yt-dlp output and similar) stay in English.
 
 ## Checks
 
@@ -103,6 +105,7 @@ Speed: yt-dlp ships unpacked (starts in ~0.2 s instead of re-extracting itself e
 npm run build
 npm run lint
 npm test
+npm run i18n:check
 CARGO_HOME="$PWD/.tools/cargo" RUSTUP_HOME="$PWD/.tools/rustup" .tools/cargo/bin/cargo test --manifest-path src-tauri/Cargo.toml
 CARGO_HOME="$PWD/.tools/cargo" RUSTUP_HOME="$PWD/.tools/rustup" .tools/cargo/bin/cargo clippy --manifest-path src-tauri/Cargo.toml -- -D warnings
 ```

@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "test": "vitest run",
     "lint": "eslint src",
+    "i18n:check": "node scripts/i18n.mjs check",
     "tauri": "tauri",
     "desktop": "node scripts/desktop.mjs dev",
     "package": "node scripts/package-macos.mjs",
