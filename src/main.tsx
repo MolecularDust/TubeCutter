@@ -361,9 +361,12 @@ function App() {
             <small>{t("Your videos. Your way.")}</small>
           </div>
         </div>
-        <button onClick={() => setShowSettings(true)}>
-          ◎ <span>{t("Account & Settings")}</span>
-        </button>
+        <div className="header-actions">
+          {languageSelect}
+          <button onClick={() => setShowSettings(true)}>
+            ◎ <span>{t("Account & Settings")}</span>
+          </button>
+        </div>
       </header>
       <main>
         <div className="intro">
