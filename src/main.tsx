@@ -361,11 +361,9 @@ function App() {
             <small>{t("Your videos. Your way.")}</small>
           </div>
         </div>
-        <div className="header-actions">
-          <button onClick={() => setShowSettings(true)}>
-            ◎ <span>{t("Account & Settings")}</span>
-          </button>
-        </div>
+        <button onClick={() => setShowSettings(true)}>
+          ◎ <span>{t("Account & Settings")}</span>
+        </button>
       </header>
       <main>
         <div className="intro">
@@ -1006,7 +1004,9 @@ function App() {
                     <button
                       onClick={() => act(() => invoke("reveal", { id: j.id }))}
                     >
-                      {isWindows ? t("Show in Explorer") : t("Reveal in Finder")}
+                      {isWindows
+                        ? t("Show in Explorer")
+                        : t("Reveal in Finder")}
                     </button>
                   ) : j.state === "failed" ? (
                     <button
