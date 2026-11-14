@@ -1,3 +1,46 @@
+<!-- languages:start -->
+<div align="center">
+
+<details>
+<summary><b>🌐 Language · Idioma · Langue · Sprache · Язык · 语言 · 言語 · 언어 · भाषा · لغة</b></summary>
+<br>
+
+<table>
+  <tr>
+    <td align="center"><b>English</b></td>
+    <td align="center"><a href="docs/i18n/README.ar.md">العربية</a></td>
+    <td align="center"><a href="docs/i18n/README.bn.md">বাংলা</a></td>
+    <td align="center"><a href="docs/i18n/README.zh-Hans.md">简体中文</a></td>
+    <td align="center"><a href="docs/i18n/README.fil.md">Filipino</a></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="docs/i18n/README.fr.md">Français</a></td>
+    <td align="center"><a href="docs/i18n/README.de.md">Deutsch</a></td>
+    <td align="center"><a href="docs/i18n/README.hi.md">हिन्दी</a></td>
+    <td align="center"><a href="docs/i18n/README.id.md">Bahasa Indonesia</a></td>
+    <td align="center"><a href="docs/i18n/README.it.md">Italiano</a></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="docs/i18n/README.ja.md">日本語</a></td>
+    <td align="center"><a href="docs/i18n/README.ko.md">한국어</a></td>
+    <td align="center"><a href="docs/i18n/README.fa.md">فارسی</a></td>
+    <td align="center"><a href="docs/i18n/README.pt-BR.md">Português (Brasil)</a></td>
+    <td align="center"><a href="docs/i18n/README.ru.md">Русский</a></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="docs/i18n/README.es.md">Español</a></td>
+    <td align="center"><a href="docs/i18n/README.te.md">తెలుగు</a></td>
+    <td align="center"><a href="docs/i18n/README.th.md">ไทย</a></td>
+    <td align="center"><a href="docs/i18n/README.tr.md">Türkçe</a></td>
+    <td align="center"><a href="docs/i18n/README.vi.md">Tiếng Việt</a></td>
+  </tr>
+</table>
+
+</details>
+
+</div>
+<!-- languages:end -->
+
 # TubeCutter
 
 **Stop downloading whole videos. Grab only the moment you want.**
@@ -27,15 +70,25 @@ To use a browser you already have signed in to instead, choose Chrome, Firefox, 
 
 You can also keep **Anonymous**, but Google's anti-bot checks are stricter for anonymous access.
 
-<!--
-## Support TubeCutter
+## Use
 
-If TubeCutter makes your life easier, consider buying me a coffee. It's just a few dollars for you, but it means a lot to me and it helps to keep the app free.
+1. Choose a destination folder with the native picker.
+2. Paste a YouTube watch, youtu.be or Shorts link and Analyze.
+3. Use the full-width YouTube player. Its native controls handle playback and volume.
+4. The timeline enables automatically after analysis. Leave In/Out unchanged to download the entire video; changing either point selects a cut. Reset restores the full video. Drag In/Out, edit HH:MM:SS(.mmm), or use Set In/Set Out. I/O work outside fields; Space toggles playback. Drag the red triangle above the track to scrub the playhead independently of In/Out. Arrow keys move a focused marker or playhead by 0.1s, Shift+Arrow by 1s; Home/End move the playhead to the video boundaries.
+5. Padding defaults to 00 seconds and extends each end, stopping at the video boundaries. Length shows the resulting padded duration. In, Out, Padding, and Length have one-second up/down buttons; Length buttons adjust Out. Preview selection plays the padded range and becomes Stop during playback. Choose Fast Cut or Precise Cut.
+6. Download settings starts expanded; click its heading to collapse or reopen it. Select a container, actual source resolution, codec, audio, subtitles and mode; add to the queue.
+7. Pause/resume or cancel active downloads. Retry failures and reveal completed files in Finder. Clear Finished removes completed, canceled, and failed rows while preserving active jobs and saved files.
 
-Behind every vibe-coded app there's a real human. Even in the AI era, development and testing take time and effort. AI makes the development cycle much faster, but it still can't pay my bills. Thank you.
--->
+Account & Settings defaults to anonymous. **Sign in to Google** / **Connect YouTube** open Google's own pages in an app window whose login persists in the app's webview storage; choosing _App's YouTube session_ then gives yt-dlp a private, per-job cookie snapshot (mode 0600, deleted afterward and swept at startup) with no browser or Keychain access.
 
-## For Developers
+Selecting a browser explicitly authorizes subsequent access to that browser's cookies and may trigger OS permissions. Do not import or share anyone else's cookies. Only paths/preferences are stored in the app config directory. Authentication is optional.
+
+## Language
+
+The app's interface is available in English and 19 other languages: Arabic, Bengali, Chinese (Simplified), Filipino, French, German, Hindi, Indonesian, Italian, Japanese, Korean, Persian, Portuguese (Brazil), Russian, Spanish, Telugu, Thai, Turkish and Vietnamese. It follows your system's language by default. To choose another, open **Account & Settings → Language**; the choice applies at once and is remembered. Arabic and Persian lay out right to left. The macOS installer's pages follow your Mac's language too.
+
+## Development
 
 ### Build for Windows (x64)
 
@@ -50,7 +103,7 @@ npm run package:windows-installer
 
 The setup file is written to `src-tauri/target/release/bundle/setup-choice`. See [working across computers](docs/CROSS_PLATFORM.md) for the Windows release notes.
 
-## Run
+### Run
 
 For cloning on Windows or Mac, moving changes between computers, and the remaining Windows release work, see [working across computers](docs/CROSS_PLATFORM.md).
 
@@ -65,7 +118,7 @@ npm run desktop
 
 On a fresh checkout, install Rust using https://rustup.rs or install it locally with `CARGO_HOME="$PWD/.tools/cargo" RUSTUP_HOME="$PWD/.tools/rustup"` and `--no-modify-path`. The desktop script uses project-local Rust when present. Place trusted standalone yt-dlp, FFmpeg, FFprobe and Deno binaries in `.tools/bin`. Development also searches PATH and conventional Homebrew locations; packaged builds use only adjacent bundled executables.
 
-## macOS development app bundle
+### macOS development app bundle
 
 ```sh
 npm run package:dev
@@ -73,7 +126,7 @@ npm run package:dev
 
 This produces a local development `.app` at `src-tauri/target/debug/bundle/macos/TubeCutter.app`. It uses the development signing posture, not the hardened distribution configuration. It is suitable for local evaluation, not public distribution.
 
-## macOS release build
+### macOS release build
 
 ```sh
 npm run package
@@ -83,23 +136,15 @@ This prepares target-suffixed sidecars, rejects Homebrew-linked executables, bui
 
 Binaries are excluded from Git. The installed versions/hashes are recorded in `docs/tool-manifest.json`. See `scripts/install-tools.mjs` for reproducible downloads for this target and `docs/DEPENDENCIES.md` for source provenance and licensing obligations. Future x64 macOS, Windows and Linux builds need target-specific tool distributions, process control verification, and native CI; they are not verified here.
 
-## Use
+### Speed
 
-1. Choose a destination folder with the native picker.
-2. Paste a YouTube watch, youtu.be or Shorts link and Analyze.
-3. Use the full-width YouTube player. Its native controls handle playback and volume.
-4. The timeline enables automatically after analysis. Leave In/Out unchanged to download the entire video; changing either point selects a cut. Reset restores the full video. Drag In/Out, edit HH:MM:SS(.mmm), or use Set In/Set Out. I/O work outside fields; Space toggles playback. Drag the red triangle above the track to scrub the playhead independently of In/Out. Arrow keys move a focused marker or playhead by 0.1s, Shift+Arrow by 1s; Home/End move the playhead to the video boundaries.
-5. Padding defaults to 00 seconds and extends each end, stopping at the video boundaries. Length shows the resulting padded duration. In, Out, Padding, and Length have one-second up/down buttons; Length buttons adjust Out. Preview selection plays the padded range and becomes Stop during playback. Choose Fast Cut or Precise Cut.
-6. Download settings starts expanded; click its heading to collapse or reopen it. Select a container, actual source resolution, codec, audio, subtitles and mode; add to the queue.
-7. Pause/resume or cancel active downloads. Retry failures and reveal completed files in Finder. Clear Finished removes completed, canceled, and failed rows while preserving active jobs and saved files.
+yt-dlp ships unpacked (starts in ~0.2 s instead of re-extracting itself each run), Analyze's metadata is reused by the matching download for up to 20 minutes (with a fresh-extraction retry if it fails), and yt-dlp uses a private cache folder. Set `TUBECUTTER_NO_CACHE=1` to compare without the cache.
 
-Account & Settings defaults to anonymous. **Sign in to Google** / **Connect YouTube** open Google's own pages in an app window whose login persists in the app's webview storage; choosing _App's YouTube session_ then gives yt-dlp a private, per-job cookie snapshot (mode 0600, deleted afterward and swept at startup) with no browser or Keychain access.
+### Translations
 
-Speed: yt-dlp ships unpacked (starts in ~0.2 s instead of re-extracting itself each run), Analyze's metadata is reused by the matching download for up to 20 minutes (with a fresh-extraction retry if it fails), and yt-dlp uses a private cache folder. Set `TUBECUTTER_NO_CACHE=1` to compare without the cache. Selecting a browser explicitly authorizes subsequent access to that browser's cookies and may trigger OS permissions. Do not import or share anyone else's cookies. Only paths/preferences are stored in the app config directory. Authentication is optional.
+The English in the code is the text to translate: `t("…")` in `src/main.tsx` looks it up in `src/locales/<code>.json` (`{0}`, `{1}` are filled in). After adding or changing a text, run `npm run i18n:check`: it lists every text without a translation, translations nobody uses any more, and translations whose placeholders don't match. Messages from the Rust side (yt-dlp output and similar) stay in English. The README is translated too: `docs/i18n/README.<code>.md` holds each language (the build notes below stay English-only). `npm run readme:languages` keeps the language chooser at the top of every README in sync, and `npm run readme:check` verifies the translations (same code text, links and structure as this file).
 
-**Language** (Account & Settings → Language): the system's language or one of 20 — Arabic, Bengali, Chinese (Simplified), English, Filipino, French, German, Hindi, Indonesian, Italian, Japanese, Korean, Persian, Portuguese (Brazil), Russian, Spanish, Telugu, Thai, Turkish, Vietnamese — listed alphabetically in the current language, applied at once. Arabic and Persian lay out right to left. The English in the code is the text to translate: `t("…")` in `src/main.tsx` looks it up in `src/locales/<code>.json` (`{0}`, `{1}` are filled in). After adding or changing a text, run `npm run i18n:check`: it lists every text without a translation, translations nobody uses any more, and translations whose placeholders don't match. Messages from the Rust side (yt-dlp output and similar) stay in English.
-
-## Checks
+### Checks
 
 ```sh
 npm run build
@@ -113,3 +158,11 @@ CARGO_HOME="$PWD/.tools/cargo" RUSTUP_HOME="$PWD/.tools/rustup" .tools/cargo/bin
 Read [architecture and dependency notes](docs/DEPENDENCIES.md) and [verification status](docs/TEST_RESULTS.md) before relying on a feature. Downloads only support content you own or have permission to download.
 
 See [test results](docs/TEST_RESULTS.md) for what has actually been verified.
+
+<!--
+## Support TubeCutter
+
+If TubeCutter makes your life easier, consider buying me a coffee. It's just a few dollars for you, but it means a lot to me and it helps to keep the app free.
+
+Behind every vibe-coded app there's a real human. Even in the AI era, development and testing take time and effort. AI makes the development cycle much faster, but it still can't pay my bills. Thank you.
+-->

@@ -9,6 +9,8 @@
     "test": "vitest run",
     "lint": "eslint src",
     "i18n:check": "node scripts/i18n.mjs check",
+    "readme:languages": "node scripts/readme-languages.mjs",
+    "readme:check": "node scripts/readme-languages.mjs --check",
     "tauri": "tauri",
     "desktop": "node scripts/desktop.mjs dev",
     "package": "node scripts/package-macos.mjs",
