@@ -386,8 +386,9 @@ fn download(
         let errors = std::thread::spawn(move || {
             let mut tail = String::new();
             for line in BufReader::new(stderr).lines().map_while(Result::ok) {
-                if tail.len() < 16384 {
-                    tail.push_str(&line)
+                if tail.len() < 65536 {
+                    tail.push_str(&line);
+                    tail.push('\n');
                 }
             }
             tail
@@ -457,6 +458,21 @@ fn download(
             return Ok(());
         }
         if !status.success() {
+            if let Some(dir) = platform::cache_dir() {
+                use std::io::Write;
+                if let Ok(mut f) = std::fs::OpenOptions::new()
+                    .create(true)
+                    .append(true)
+                    .open(dir.with_file_name("last-error.log"))
+                {
+                    let _ = writeln!(
+                        f,
+                        "--- exit {status} (cached info: {}) ---\n{}",
+                        info_file.is_some(),
+                        redact(&errors)
+                    );
+                }
+            }
             if info_file.is_some() && !errors.to_lowercase().contains("http error 429") {
                 retry_fresh = true;
                 return Ok(());
@@ -713,7 +729,7 @@ fn normalize_fast(
 }
 
 #[tauri::command]
-fn enqueue(app: tauri::AppHandle, s: State<Backend>, request: Request) -> Result<String, String> {
+async fn enqueue(app: tauri::AppHandle, s: State<'_, Backend>, request: Request) -> Result<String, String> {
     validate(&request)?;
     if !PathBuf::from(&request.destination).is_dir() {
         return Err("Choose an existing destination folder".into());
@@ -795,7 +811,7 @@ fn clear_completed(s: State<Backend>) -> Vec<String> {
     clear_finished(&mut s.jobs.lock().unwrap())
 }
 #[tauri::command]
-fn retry(app: tauri::AppHandle, s: State<Backend>, id: String) -> Result<String, String> {
+async fn retry(app: tauri::AppHandle, s: State<'_, Backend>, id: String) -> Result<String, String> {
     let request = {
         let map = s.jobs.lock().unwrap();
         let j = map.get(&id).ok_or("Unknown download")?;
@@ -804,7 +820,7 @@ fn retry(app: tauri::AppHandle, s: State<Backend>, id: String) -> Result<String,
         }
         j.request.clone()
     };
-    enqueue(app, s, request)
+    enqueue(app, s, request).await
 }
 #[tauri::command]
 fn reveal(s: State<Backend>, id: String) -> Result<(), String> {
@@ -845,6 +861,17 @@ fn read_clipboard(app: tauri::AppHandle) -> Result<String, String> {
     Ok(text.trim().to_string())
 }
 pub fn run() {
+    // On Windows ARM64 (seen on Snapdragon), scrolling and input stall for about two seconds
+    // while the YouTube preview initializes its GPU compositing / DirectX surface.
+    // Disabling GPU hardware acceleration in WebView2 (Test B) keeps the window completely responsive.
+    // The variable replaces Tauri's default arguments, so they are repeated.
+    #[cfg(all(windows, target_arch = "aarch64"))]
+    if std::env::var_os("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS").is_none() {
+        std::env::set_var(
+            "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS",
+            "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection --site-per-process --disable-gpu",
+        );
+    }
     let app = tauri::Builder::default()
         .plugin(tauri_plugin_clipboard_manager::init())
         .setup(|app| {
@@ -947,4 +974,22 @@ mod error_tests {
     fn macos_private_paths_do_not_imply_private_videos() {
         assert!(!safe_error("/private/var/tmp: unexpected failure").contains("YouTube denied"));
     }
+}
+/// Strips session cookie values from yt-dlp's verbose output before it is written to the diagnostic log.
+fn redact(text: &str) -> String {
+    let mut out = String::new();
+    let mut rest = text;
+    while let Some(i) = rest.find("-cookies ") {
+        out.push_str(&rest[..i]);
+        out.push_str("-cookies <redacted> ");
+        let tail = &rest[i + 9..];
+        let end = [" -headers", " -ss ", " -t ", " -i ", " -c "]
+            .iter()
+            .filter_map(|m| tail.find(m))
+            .min()
+            .unwrap_or(tail.len());
+        rest = &tail[end + 1.min(tail.len() - end)..];
+    }
+    out.push_str(rest);
+    out
 }

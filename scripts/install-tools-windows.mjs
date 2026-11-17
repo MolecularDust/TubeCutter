@@ -10,20 +10,37 @@ import {
 import { basename, join } from "node:path";
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
-if (process.platform !== "win32" || process.arch !== "x64")
-  throw Error("Windows tool installer targets Windows x64 only.");
-const target = "x86_64-pc-windows-msvc";
+const arches = {
+  x64: { target: "x86_64-pc-windows-msvc", suffix: "" },
+  arm64: { target: "aarch64-pc-windows-msvc", suffix: "-arm64" },
+};
+const arch = arches[process.arch];
+if (process.platform !== "win32" || !arch)
+  throw Error("Windows tool installer targets Windows x64 and ARM64 only.");
+const { target } = arch;
 // Windows 10+ ships bsdtar, which reads zip archives. Git's GNU tar does not.
-const tar = join(process.env.SystemRoot ?? "C:\\Windows", "System32", "tar.exe");
+const tar = join(
+  process.env.SystemRoot ?? "C:\\Windows",
+  "System32",
+  "tar.exe",
+);
 const tools = JSON.parse(
   readFileSync(
-    new URL("../docs/tool-downloads-windows.json", import.meta.url),
+    new URL(
+      `../docs/tool-downloads-windows${arch.suffix}.json`,
+      import.meta.url,
+    ),
     "utf8",
   ),
 );
 const sha256 = (path) =>
   createHash("sha256").update(readFileSync(path)).digest("hex");
-for (const dir of [".tools/downloads", ".tools/extract", ".tools/bin", "src-tauri/binaries"])
+for (const dir of [
+  ".tools/downloads",
+  ".tools/extract",
+  ".tools/bin",
+  "src-tauri/binaries",
+])
   mkdirSync(dir, { recursive: true });
 const manifest = [];
 for (const tool of tools) {
@@ -51,13 +68,18 @@ for (const tool of tools) {
     source = join(extract, tool.member);
   }
   const exe = `${tool.name}.exe`;
-  const staged = [join(".tools/bin", exe), join("src-tauri/binaries", `${tool.name}-${target}.exe`)];
+  const staged = [
+    join(".tools/bin", exe),
+    join("src-tauri/binaries", `${tool.name}-${target}.exe`),
+  ];
   for (const dst of staged) {
     copyFileSync(source, dst);
     chmodSync(dst, 0o755);
   }
   const versionArgs =
-    tool.name === "ffmpeg" || tool.name === "ffprobe" ? ["-version"] : ["--version"];
+    tool.name === "ffmpeg" || tool.name === "ffprobe"
+      ? ["-version"]
+      : ["--version"];
   const version = spawnSync(staged[0], versionArgs, { encoding: "utf8" });
   if (version.status !== 0) throw Error(`Cannot execute ${tool.name}`);
   manifest.push({
@@ -68,7 +90,7 @@ for (const tool of tools) {
   });
 }
 writeFileSync(
-  "docs/tool-manifest-windows.json",
+  `docs/tool-manifest-windows${arch.suffix}.json`,
   JSON.stringify(manifest, null, 2) + "\n",
 );
-console.log("Prepared Windows x64 sidecars in src-tauri/binaries.");
+console.log(`Prepared Windows ${process.arch} sidecars in src-tauri/binaries.`);

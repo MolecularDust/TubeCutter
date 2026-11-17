@@ -92,6 +92,12 @@ pub fn command(name: &str) -> Result<Command, String> {
     let mut c = Command::new(binary(name)?);
     // Interpreter mode works under hardened signing without JIT entitlements.
     c.env("DENO_V8_FLAGS", "--jitless");
+    #[cfg(windows)]
+    if std::env::var_os("http_proxy").is_none() && std::env::var_os("HTTP_PROXY").is_none() {
+        if let Some(proxy) = system_proxy() {
+            c.env("http_proxy", proxy).env("https_proxy", proxy);
+        }
+    }
     let exe = std::env::current_exe().map_err(|_| "Cannot locate application")?;
     // macOS bundles resources under Contents/Resources; Windows installs them beside the executable.
     let bundled_ca = [
@@ -307,4 +313,56 @@ mod tests {
         assert!(!child.wait().unwrap().success());
         assert!(signal(pid, "cancel").is_err());
     }
+}
+
+/// The Windows system proxy ("Internet Options"), as `http://host:port`.
+/// yt-dlp reads it by itself, but FFmpeg (used for section downloads) only follows
+/// `http_proxy`, so without it FFmpeg connects directly and fails where a proxy is required.
+#[cfg(windows)]
+fn system_proxy() -> Option<&'static str> {
+    use std::{os::windows::process::CommandExt, sync::OnceLock};
+    static PROXY: OnceLock<Option<String>> = OnceLock::new();
+    PROXY
+        .get_or_init(|| {
+            let query = |name: &str| -> Option<String> {
+                let out = Command::new("reg")
+                    .args([
+                        "query",
+                        r"HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings",
+                        "/v",
+                        name,
+                    ])
+                    .creation_flags(CREATE_NO_WINDOW)
+                    .output()
+                    .ok()?;
+                let text = String::from_utf8_lossy(&out.stdout).into_owned();
+                text.lines()
+                    .find(|l| l.trim_start().starts_with(name))
+                    .and_then(|l| l.split_whitespace().last().map(str::to_string))
+            };
+            if query("ProxyEnable")?.trim_start_matches("0x").trim_start_matches('0') != "1" {
+                return None;
+            }
+            let list = query("ProxyServer")?;
+            let pick = |scheme: &str| {
+                list.split(';')
+                    .find_map(|p| p.strip_prefix(&format!("{scheme}=")))
+                    .map(str::to_string)
+            };
+            let server = if list.contains('=') {
+                pick("https").or_else(|| pick("http"))?
+            } else {
+                list
+            };
+            let server = server.trim().to_string();
+            if server.is_empty() || server.starts_with("socks") {
+                return None;
+            }
+            Some(if server.contains("://") {
+                server
+            } else {
+                format!("http://{server}")
+            })
+        })
+        .as_deref()
 }

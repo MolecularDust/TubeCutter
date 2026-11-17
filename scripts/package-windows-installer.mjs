@@ -1,15 +1,13 @@
 import { spawnSync } from "node:child_process";
-import {
-  copyFileSync,
-  cpSync,
-  existsSync,
-  mkdirSync,
-  rmSync,
-} from "node:fs";
+import { copyFileSync, cpSync, existsSync, mkdirSync, rmSync } from "node:fs";
 import { join, resolve } from "node:path";
-if (process.platform !== "win32" || process.arch !== "x64")
-  throw Error("This installer workflow targets Windows x64.");
-const target = "x86_64-pc-windows-msvc";
+const targets = {
+  x64: "x86_64-pc-windows-msvc",
+  arm64: "aarch64-pc-windows-msvc",
+};
+const target = targets[process.arch];
+if (process.platform !== "win32" || !target)
+  throw Error("This installer workflow targets Windows x64 and ARM64.");
 const version = "0.1.1";
 const makensis = join(
   process.env.LOCALAPPDATA ?? "",
@@ -23,7 +21,9 @@ if (!existsSync(makensis))
   );
 const exe = resolve("src-tauri/target/release/tubecutter.exe");
 if (!existsSync(exe))
-  throw Error(`Release build missing: ${exe}. Run npm run package:windows first.`);
+  throw Error(
+    `Release build missing: ${exe}. Run npm run package:windows first.`,
+  );
 // Stage the same files the Tauri installer ships, in the layout the app expects.
 const payload = resolve(".tools/installer/payload");
 rmSync(payload, { recursive: true, force: true });
@@ -42,7 +42,10 @@ cpSync(resolve("LICENSES"), join(payload, "LICENSES"), { recursive: true });
 copyFileSync(resolve("docs/DEPENDENCIES.md"), join(payload, "DEPENDENCIES.md"));
 const outDir = resolve("src-tauri/target/release/bundle/setup-choice");
 mkdirSync(outDir, { recursive: true });
-const outFile = join(outDir, `TubeCutter-Setup_${version}_Windows_x64.exe`);
+const outFile = join(
+  outDir,
+  `TubeCutter-Setup_${version}_Windows_${process.arch}.exe`,
+);
 const r = spawnSync(
   makensis,
   [

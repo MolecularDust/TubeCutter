@@ -33,7 +33,7 @@ git push
 
 Commit or stash local edits before pulling. If Git reports that branches have diverged, resolve the differences before continuing; avoid force pushing. Dependencies, media tools, build outputs, app preferences, and downloaded videos are local to each computer and are not synchronized by Git. Install dependencies separately with `npm ci`; never copy node_modules between operating systems. The repository includes source, icons, lockfiles, documentation, and project history. App installers should be distributed separately from source.
 
-## Windows build (x64)
+## Windows build (x64 and ARM64)
 
 Install Rust with the MSVC toolchain, Microsoft C++ Build Tools with Desktop development with C++, and WebView2. Follow the official prerequisites: https://tauri.app/start/prerequisites/.
 
@@ -43,9 +43,9 @@ npm run install:tools:windows
 npm run desktop
 ```
 
-`install:tools:windows` downloads the pinned yt-dlp, Deno, FFmpeg, and FFprobe builds listed in `docs/tool-downloads-windows.json`, verifies each against its SHA256, and stages them in `.tools/bin` and `src-tauri/binaries`. Its results are recorded in `docs/tool-manifest-windows.json`.
+`install:tools:windows` downloads the pinned yt-dlp, Deno, FFmpeg, and FFprobe builds listed in `docs/tool-downloads-windows.json` (x64) or `docs/tool-downloads-windows-arm64.json` (ARM64), verifies each against its SHA256, and stages them in `.tools/bin` and `src-tauri/binaries`. Its results are recorded in `docs/tool-manifest-windows.json` or `docs/tool-manifest-windows-arm64.json`.
 
-`npm run package:windows` produces `src-tauri/target/release/bundle/nsis/TubeCutter_0.1.1_x64-setup.exe`. The installer is not code-signed. Windows SmartScreen may warn on first run until signing is decided.
+`npm run package:windows` produces the target-architecture NSIS setup executable. `npm run package:windows-installer` builds the setup choice installer (`TubeCutter-Setup_0.1.1_Windows_<arch>.exe`). Installers are not code-signed. Windows SmartScreen may warn on first run until signing is decided.
 
 Windows pause, resume, and cancel act on the whole process tree, because the yt-dlp executable starts a child process. Process control has a unit test on Windows. The complete download, cut, and cancel flow in the installed app still needs manual testing, including preview, clipboard, folder selection, cancellation cleanup, and queue clearing.
 
